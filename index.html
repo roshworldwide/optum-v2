@@ -1,82 +1,217 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sahayak — Offline Fraud-Shield Demo</title>
-<style>
-:root{--saf:#F2761B;--grn:#0E7C57;--ink:#14171F;--mut:#6B7280;--bg:#EAF0F2;--bub:#F4F6F8;--u:#DCF3E7;}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
-body{font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans',sans-serif;background:linear-gradient(160deg,#0B0E1A,#1A2340);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:26px 12px 40px;color:#fff;}
-.cap{max-width:420px;text-align:center;margin-bottom:16px;}
-.cap h1{font-size:20px;font-weight:800;letter-spacing:.2px;}
-.cap p{font-size:13px;color:#AEB6CC;margin-top:5px;line-height:1.5;}
-.cap .tag{display:inline-block;margin-top:9px;font-size:11px;font-weight:700;color:#35E0C3;border:1px solid #35E0C333;background:#35E0C31a;border-radius:20px;padding:4px 11px;letter-spacing:.4px;}
-.phone{width:360px;max-width:94vw;height:720px;background:var(--bg);border-radius:38px;padding:11px;box-shadow:0 24px 60px rgba(0,0,0,.5);border:1px solid #0003;position:relative;}
-.screen{background:var(--bg);height:100%;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative;}
-.stat{height:26px;background:var(--grn);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:11px;font-weight:600;}
-.stat .off{display:flex;align-items:center;gap:5px;}
-.dotoff{width:7px;height:7px;border-radius:50%;background:#FFD54A;box-shadow:0 0 0 3px #ffd54a33;}
-.hdr{background:var(--grn);color:#fff;padding:9px 14px 12px;display:flex;align-items:center;gap:11px;}
-.av{width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;}
-.hdr .nm{font-size:15.5px;font-weight:700;line-height:1.1;}
-.hdr .sub{font-size:10.5px;opacity:.9;margin-top:2px;display:flex;align-items:center;gap:5px;}
-.chat{flex:1;overflow-y:auto;padding:14px 12px 6px;background:linear-gradient(180deg,#EAF0F2,#E4EBEE);}
-.row{display:flex;margin-bottom:9px;}
-.row.u{justify-content:flex-end;}
-.b{max-width:80%;padding:8px 11px;border-radius:14px;font-size:13px;line-height:1.42;box-shadow:0 1px 1px #0000000d;}
-.b.a{background:#fff;border-top-left-radius:4px;color:var(--ink);}
-.b.u{background:var(--u);border-top-right-radius:4px;color:#0b3b28;}
-.b .hi{font-weight:600;}
-.b .en{color:var(--mut);font-size:11.5px;display:block;margin-top:2px;}
-.verdict{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12px;padding:3px 9px;border-radius:8px;margin-bottom:5px;}
-.scam{background:#FDE7E7;color:#C0271F;}
-.safe{background:#E4F5EC;color:#0E7C57;}
-.tip{background:#FFF4E5;color:#9A5B12;font-size:11.5px;padding:6px 9px;border-radius:9px;margin-top:6px;line-height:1.4;}
-.chips{padding:8px 12px;display:flex;gap:7px;flex-wrap:wrap;background:#E4EBEE;border-top:1px solid #0000000f;}
-.chip{font-size:11.5px;background:#fff;border:1px solid #0e7c5733;color:var(--grn);border-radius:16px;padding:6px 11px;cursor:pointer;font-weight:600;transition:.15s;}
-.chip:hover{background:var(--grn);color:#fff;}
-.bar{display:flex;align-items:center;gap:9px;padding:9px 12px 11px;background:#E4EBEE;}
-.inp{flex:1;background:#fff;border-radius:22px;padding:9px 14px;font-size:12.5px;color:var(--mut);border:1px solid #0000000f;}
-.mic{width:42px;height:42px;border-radius:50%;background:var(--saf);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto;box-shadow:0 3px 10px #f2761b55;cursor:pointer;}
-.priv{text-align:center;font-size:10px;color:var(--mut);padding:5px 0 8px;background:#E4EBEE;}
-.priv b{color:var(--grn);}
-.foot{max-width:420px;text-align:center;margin-top:16px;font-size:11px;color:#8A92A8;line-height:1.6;}
-.foot b{color:#c9d0e6;}
-</style></head><body>
-<div class="cap">
-  <h1>Sahayak — Offline Fraud-Shield</h1>
-  <p>A voice-first assistant that protects Bharat's first-time digital users from fraud and helps them claim their entitlements — running fully on-device, no internet.</p>
-  <span class="tag">● INTERACTIVE DEMO · tap the questions below</span>
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="sahayak-standalone" content="1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e7c57">
+<meta name="description" content="Sahayak: offline scam check and benefits guide, running on this node.">
+<title>Sahayak · सहायक</title>
+<link rel="manifest" href="app/manifest.webmanifest">
+<link rel="icon" href="app/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <button class="brand" data-go="home" aria-label="Sahayak home">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 7 10v12c0 11 7.3 18.6 17 22 9.7-3.4 17-11 17-22V10L24 4Z" fill="#fff"/><path d="M17 24.5l5 5 10-11" fill="none" stroke="#0e7c57" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="brand-text"><b>सहायक</b><small>SAHAYAK</small></span>
+  </button>
+  <span class="node-pill" id="node-pill" title=""><span class="dot" aria-hidden="true"></span><span data-i18n="node_pill"></span></span>
+  <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true" aria-label="Read screens aloud">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path class="waves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mute" d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+  <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Change language">EN</button>
+</header>
+
+<main id="main">
+  <!-- HOME -->
+  <section class="screen" data-screen="home">
+    <h1 data-i18n="home_title"></h1>
+    <p class="sub" data-i18n="home_sub"></p>
+    <p class="note" id="phone-mode-note" data-i18n="phone_mode_note" hidden></p>
+    <div class="tiles">
+      <button class="tile tile-shield" data-go="check" type="button">
+        <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M28 5 9 12v13c0 13 8 22 19 26 11-4 19-13 19-26V12L28 5Z" fill="#e3f3ec" stroke="#0e7c57" stroke-width="2.5"/><path d="M20 28.5l6 6 11-12" fill="none" stroke="#0e7c57" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="tile-title" data-i18n="tile_check"></span>
+        <span class="tile-sub" data-i18n="tile_check_sub"></span>
+      </button>
+      <button class="tile tile-rupee" data-go="benefits" type="button">
+        <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="#fff1e2" stroke="#e8711a" stroke-width="2.5"/><path d="M20 17h17M20 24h17M24 17c8 0 8 13 0 13h-3l12 11" fill="none" stroke="#e8711a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="tile-title" data-i18n="tile_benefits"></span>
+        <span class="tile-sub" data-i18n="tile_benefits_sub"></span>
+      </button>
+      <a class="tile tile-help" href="tel:1930">
+        <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="#fde8e6" stroke="#c0271f" stroke-width="2.5"/><path d="M21 16c-2 0-4 2-4 4 0 10 9 19 19 19 2 0 4-2 4-4v-3l-6-2-3 3c-3-1-7-5-8-8l3-3-2-6h-3Z" fill="#c0271f"/></svg>
+        <span class="tile-title" data-i18n="tile_help"></span>
+        <span class="tile-sub" data-i18n="tile_help_sub"></span>
+      </a>
+    </div>
+    <details class="voice-settings">
+      <summary data-i18n="voice_settings"></summary>
+      <div class="seg" role="radiogroup" aria-label="Voice">
+        <label><input type="radio" name="vgender" value="female" checked><span data-i18n="voice_female"></span></label>
+        <label><input type="radio" name="vgender" value="male"><span data-i18n="voice_male"></span></label>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Speed">
+        <label><input type="radio" name="vspeed" value="normal" checked><span data-i18n="speed_normal"></span></label>
+        <label><input type="radio" name="vspeed" value="slow"><span data-i18n="speed_slow"></span></label>
+      </div>
+      <p class="note" id="voice-status"></p>
+    </details>
+  </section>
+
+  <!-- CHECK A MESSAGE -->
+  <section class="screen" data-screen="check" hidden>
+    <h2 data-i18n="check_title"></h2>
+    <div class="modes" role="radiogroup" aria-label="What to check">
+      <label><input type="radio" name="mode" value="text" checked><span data-i18n="mode_text"></span></label>
+      <label><input type="radio" name="mode" value="call"><span data-i18n="mode_call"></span></label>
+      <label><input type="radio" name="mode" value="qr"><span data-i18n="mode_qr"></span></label>
+      <label><input type="radio" name="mode" value="ocr"><span data-i18n="mode_ocr"></span></label>
+    </div>
+    <div id="mode-text">
+      <label class="label" for="msg" id="msg-label" data-i18n="check_label"></label>
+      <p class="note" id="ocr-review" data-i18n="ocr_review" hidden></p>
+      <textarea id="msg" maxlength="4000" autocomplete="off" spellcheck="false"></textarea>
+      <div id="mic-msg" class="mic-slot"></div>
+      <details class="extra">
+        <summary data-i18n="sender_add"></summary>
+        <label class="label" for="sender" data-i18n="sender_label"></label>
+        <input id="sender" type="text" maxlength="40" autocomplete="off" inputmode="text" placeholder="AX-SBIBNK-S / 98xxxxxx10">
+      </details>
+      <button id="btn-check" class="primary big" type="button" data-i18n="check_btn"></button>
+      <p class="try" data-i18n="try_examples"></p>
+      <div class="chips" id="examples"></div>
+    </div>
+    <div id="mode-image" hidden>
+      <p class="label" id="image-label"></p>
+      <label class="photo-btn">
+        <input id="image-input" type="file" accept="image/*" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span id="image-btn-label"></span>
+      </label>
+      <p class="try" id="qr-try-label" data-i18n="qr_try"></p>
+      <div class="chips" id="qr-examples"></div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" data-screen="result" hidden>
+    <div id="verdict" class="verdict" role="status" aria-live="polite"></div>
+    <h2 id="headline" tabindex="-1"></h2>
+    <div id="qr-box" class="qr-box" hidden></div>
+    <div id="explain" class="explain loading">
+      <span class="explain-title" data-i18n="in_simple_words"></span>
+      <p id="explain-text"></p>
+    </div>
+    <h3 data-i18n="why"></h3>
+    <ul id="reasons" class="reasons"></ul>
+    <h3 data-i18n="what_to_do"></h3>
+    <ol id="actions" class="actions"></ol>
+    <div class="cta-row">
+      <a id="btn-1930" class="danger" href="tel:1930"><span data-i18n="call_1930"></span></a>
+      <button id="btn-speak" class="secondary" type="button" data-i18n="speak_btn"></button>
+      <button id="btn-complaint" class="secondary" type="button" data-i18n="complaint_btn"></button>
+      <button class="ghost" data-go="check" type="button" data-i18n="check_another"></button>
+      <button id="btn-real-benefits" class="secondary wide" data-go="benefits" type="button" data-i18n="real_benefits" hidden></button>
+      <button id="btn-agent-check" class="secondary wide" type="button" data-i18n="ask_agent"></button>
+    </div>
+    <button id="safety-badge" class="safety" type="button" aria-expanded="false" aria-controls="safety-detail" hidden></button>
+    <div id="safety-detail" class="safety-detail" hidden></div>
+    <p id="meta" class="meta"></p>
+  </section>
+
+  <!-- 1930 COMPLAINT DRAFT -->
+  <section class="screen" data-screen="complaint" hidden>
+    <h2 data-i18n="complaint_title"></h2>
+    <p class="note" data-i18n="complaint_note"></p>
+    <form id="complaint-form" class="form-grid" autocomplete="off">
+      <label><span data-i18n="c_when"></span><input type="datetime-local" name="when"></label>
+      <label><span data-i18n="c_channel"></span><input type="text" name="channel"></label>
+      <label><span data-i18n="c_number"></span><input type="tel" name="number"></label>
+      <label><span data-i18n="c_upi"></span><input type="text" name="upi"></label>
+      <label><span data-i18n="c_link"></span><input type="text" name="link"></label>
+      <label><span data-i18n="c_lost"></span><input type="number" name="lost" min="0" inputmode="numeric"></label>
+      <label><span data-i18n="c_txn"></span><input type="text" name="txn"></label>
+      <label><span data-i18n="c_message"></span><textarea name="message" rows="5" readonly></textarea></label>
+    </form>
+    <div class="cta-row no-print">
+      <button id="btn-print" class="primary" type="button" data-i18n="print_btn"></button>
+      <button class="secondary" data-go="result" type="button" data-i18n="back"></button>
+    </div>
+  </section>
+
+  <!-- BENEFITS NAVIGATOR: intro -->
+  <section class="screen" data-screen="benefits" hidden>
+    <h2 data-i18n="tile_benefits"></h2>
+    <p class="sub" data-i18n="nav_intro"></p>
+    <ul class="promise">
+      <li data-i18n="nav_promise_1"></li>
+      <li data-i18n="nav_promise_2"></li>
+      <li data-i18n="nav_promise_3"></li>
+    </ul>
+    <button id="btn-nav-start" class="primary big" type="button" data-i18n="nav_start"></button>
+    <p class="try" data-i18n="nav_try"></p>
+    <div class="chips" id="nav-demos"></div>
+    <p class="covers" id="nav-covers"></p>
+  </section>
+
+  <!-- BENEFITS NAVIGATOR: one question per screen -->
+  <section class="screen" data-screen="question" hidden>
+    <div class="q-progress">
+      <span id="q-count"></span>
+      <span class="bar" aria-hidden="true"><span id="q-bar"></span></span>
+    </div>
+    <h2 id="q-text" tabindex="-1"></h2>
+    <p id="q-help" class="sub"></p>
+    <div id="q-body" class="q-body"></div>
+    <div id="q-mic" class="mic-slot"></div>
+    <div id="q-confirm" class="confirm" role="alertdialog" aria-live="assertive" hidden></div>
+    <div class="q-foot">
+      <button id="btn-q-back" class="ghost" type="button" data-i18n="back"></button>
+      <button id="btn-q-listen" class="secondary" type="button" data-i18n="speak_btn"></button>
+    </div>
+  </section>
+
+  <!-- BENEFITS NAVIGATOR: result -->
+  <section class="screen" data-screen="benefits-result" hidden>
+    <div id="nav-summary" class="nav-summary" role="status" aria-live="polite" tabindex="-1"></div>
+    <div id="nav-health"></div>
+    <div id="nav-groups"></div>
+    <p class="note" id="nav-amount-note"></p>
+    <p class="note warn" id="nav-fraud-note"></p>
+    <div class="cta-row">
+      <button id="btn-slip" class="primary wide" type="button" data-i18n="nav_slip"></button>
+      <button id="btn-nav-listen" class="secondary" type="button" data-i18n="speak_btn"></button>
+      <button id="btn-nav-change" class="secondary" type="button" data-i18n="nav_change"></button>
+      <button id="btn-agent-nav" class="secondary wide" type="button" data-i18n="ask_agent"></button>
+      <button id="btn-nav-restart" class="ghost wide" type="button" data-i18n="nav_restart"></button>
+    </div>
+    <p id="nav-meta" class="meta"></p>
+  </section>
+
+  <!-- BENEFITS NAVIGATOR: printable case slip -->
+  <section class="screen" data-screen="slip" hidden>
+    <div id="slip-sheet" class="slip-sheet"></div>
+    <div class="cta-row no-print">
+      <button id="btn-slip-print" class="primary" type="button" data-i18n="print_btn"></button>
+      <button class="secondary" data-go="benefits-result" type="button" data-i18n="back"></button>
+    </div>
+  </section>
+</main>
+
+<div id="ticket" class="ticket-sheet" role="alertdialog" aria-live="assertive" hidden>
+  <p data-i18n="ticket_title"></p>
+  <div id="ticket-no" class="ticket-no"></div>
+  <p class="sub" data-i18n="ticket_sub"></p>
+  <button class="primary" id="ticket-ok" type="button" data-i18n="ticket_ok"></button>
 </div>
-<div class="phone"><div class="screen">
-  <div class="stat"><span>9:41</span><span class="off"><span class="dotoff"></span>OFFLINE · on-device</span></div>
-  <div class="hdr">
-    <div class="av">🛡️</div>
-    <div><div class="nm">Sahayak साहायक</div><div class="sub">आपका सुरक्षा साथी · your safety companion</div></div>
-  </div>
-  <div class="chat" id="chat">
-    <div class="row u"><div class="b u"><span class="hi">"₹500 जीते! लिंक खोलें: bit.ly/claim-money"</span><span class="en">Is this SMS real? I won a prize?</span></div></div>
-    <div class="row"><div class="b a"><span class="verdict scam">⚠️ FRAUD · धोखा</span><br><span class="hi">यह ठगी है। असली इनाम कभी लिंक या OTP नहीं माँगते।</span><span class="en">This is a scam. Real prizes never ask you to open a link or share an OTP. Do not tap it.</span><div class="tip">🔒 सुझाव: लिंक न खोलें · किसी को OTP न दें · 1930 पर शिकायत करें (cyber-crime helpline).</div></div></div>
-  </div>
-  <div class="chips" id="chips">
-    <span class="chip" data-k="otp">Someone wants my OTP</span>
-    <span class="chip" data-k="pension">Which pension can I get?</span>
-    <span class="chip" data-k="kyc">"KYC expired" message</span>
-  </div>
-  <div class="bar"><div class="inp">अपनी भाषा में बोलें… · Ask in your language</div><div class="mic">🎙️</div></div>
-  <div class="priv">🔒 <b>0 bytes sent.</b> Runs on-device · works with no internet</div>
-</div></div>
-<div class="foot"><b>Engine:</b> Crucible — air-gapped 14B LLM, 0 bytes outbound &nbsp;·&nbsp; <b>Safety:</b> open-source eval gate on every answer<br>Deployed on a low-cost node at a CSC / Business-Correspondent point — one node protects a whole village.</div>
-<script>
-const A={
- otp:{q:'बैंक वाला OTP माँग रहा है / A caller says he is from the bank and wants my OTP',v:'scam',t:'⚠️ FRAUD · धोखा',a:'बैंक कभी OTP नहीं माँगता। फ़ोन काट दें।',en:'No bank ever asks for your OTP or PIN by call or SMS. Hang up. Never share it.',tip:'🔒 OTP = आपकी चाबी · किसी को न दें · 1930 पर रिपोर्ट करें.'},
- pension:{q:'मैं 62 साल की हूँ, कौन सी पेंशन मिल सकती है? / I am 62 — which pension can I claim?',v:'safe',t:'✅ ELIGIBLE · पात्र',a:'आप वृद्धावस्था पेंशन (NSAP) के लिए पात्र हो सकती हैं।',en:'You may qualify for the National Old-Age Pension (IGNOAPS). I can list the papers and the nearest CSC to apply.',tip:'📄 चाहिए: आधार · बैंक पासबुक · आयु प्रमाण. नज़दीकी CSC पर मुफ़्त आवेदन.'},
- kyc:{q:'"आपका KYC खत्म, यहाँ अपडेट करें" — SMS आया / SMS says my KYC expired, update here',v:'scam',t:'⚠️ FRAUD · धोखा',a:'यह ठगी का आम तरीका है। लिंक न खोलें।',en:'This is a common scam. Banks do not update KYC via random links. Visit your branch or CSC in person.',tip:'🔒 अनजान लिंक न खोलें · ऐप डाउनलोड न करें · शाखा जाएँ.'}
-};
-const chat=document.getElementById('chat');
-function add(html,cls){const r=document.createElement('div');r.className='row '+(cls||'');r.innerHTML='<div class="b '+(cls==='u'?'u':'a')+'">'+html+'</div>';chat.appendChild(r);chat.scrollTop=chat.scrollHeight;}
-document.getElementById('chips').addEventListener('click',e=>{
- const k=e.target.getAttribute('data-k'); if(!k)return; const d=A[k];
- add('<span class="hi">'+d.q.split(' / ')[0]+'</span><span class="en">'+(d.q.split(' / ')[1]||'')+'</span>','u');
- setTimeout(()=>add('<span class="verdict '+(d.v)+'">'+d.t+'</span><br><span class="hi">'+d.a+'</span><span class="en">'+d.en+'</span><div class="tip">'+d.tip+'</div>'),350);
- e.target.style.display='none';
-});
-</script>
-</body></html>
+
+<footer class="foot"><span data-i18n="foot"></span> <span id="pack-version"></span></footer>
+<script src="app/mic.js" defer></script>
+<script src="app/checker.js" defer></script>
+<script src="app/navigator.js" defer></script>
+<script src="app/app.js" defer></script>
+</body>
+</html>

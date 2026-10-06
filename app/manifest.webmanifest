@@ -1,0 +1,28 @@
+{
+  "name": "Sahayak · सहायक",
+  "short_name": "Sahayak",
+  "description": "Offline scam check and benefits guide.",
+  "start_url": "../",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#0e7c57",
+  "lang": "hi",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "../",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
