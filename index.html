@@ -10,6 +10,7 @@
 <title>Sahayak · सहायक</title>
 <link rel="manifest" href="app/manifest.webmanifest">
 <link rel="icon" href="app/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="app/icons/icon-192.png">
 <link rel="preload" href="app/fonts/symbols.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="app/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app/styles.css">
@@ -37,6 +38,11 @@
       <div class="hero-glass">
         <h1 data-i18n="home_title"></h1>
         <p class="sub" data-i18n="home_sub"></p>
+        <ul class="trust">
+          <li><span class="ms" aria-hidden="true">wifi_off</span><span data-i18n="trust_offline"></span></li>
+          <li><span class="ms" aria-hidden="true">person_off</span><span data-i18n="trust_private"></span></li>
+          <li><span class="ms" aria-hidden="true">volume_up</span><span data-i18n="trust_voice"></span></li>
+        </ul>
       </div>
     </div>
     <p class="note" id="phone-mode-note" data-i18n="phone_mode_note" hidden></p>
@@ -56,14 +62,27 @@
         <span class="tile-text"><span class="tile-title" data-i18n="tile_help"></span><span class="tile-sub" data-i18n="tile_help_sub"></span></span>
         <span class="ms chev" aria-hidden="true">chevron_right</span>
       </a>
+      <button class="tile tile-install" id="btn-install" type="button" hidden>
+        <span class="tile-icon" aria-hidden="true"><span class="ms">install_mobile</span></span>
+        <span class="tile-text"><span class="tile-title" data-i18n="install_title"></span><span class="tile-sub" data-i18n="install_sub"></span></span>
+        <span class="ms chev" aria-hidden="true">chevron_right</span>
+      </button>
     </div>
     <details class="voice-settings settings">
       <summary><span class="ms" aria-hidden="true">record_voice_over</span><span data-i18n="voice_settings"></span></summary>
       <div class="settings-body">
+        <p class="settings-label" data-i18n="text_size"></p>
+        <div class="seg" role="radiogroup" aria-label="Text size">
+          <label><input type="radio" name="tsize" value="normal" checked><span data-i18n="size_normal"></span></label>
+          <label><input type="radio" name="tsize" value="large"><span data-i18n="size_large"></span></label>
+          <label><input type="radio" name="tsize" value="xl"><span data-i18n="size_xl"></span></label>
+        </div>
+        <p class="settings-label" data-i18n="voice_label"></p>
         <div class="seg" role="radiogroup" aria-label="Voice">
           <label><input type="radio" name="vgender" value="female" checked><span data-i18n="voice_female"></span></label>
           <label><input type="radio" name="vgender" value="male"><span data-i18n="voice_male"></span></label>
         </div>
+        <p class="settings-label" data-i18n="speed_label"></p>
         <div class="seg" role="radiogroup" aria-label="Speed">
           <label><input type="radio" name="vspeed" value="normal" checked><span data-i18n="speed_normal"></span></label>
           <label><input type="radio" name="vspeed" value="slow"><span data-i18n="speed_slow"></span></label>
@@ -86,6 +105,7 @@
       <label><input type="radio" name="mode" value="ocr"><span class="seg-item"><span class="ms" aria-hidden="true">screenshot_monitor</span><span data-i18n="mode_ocr"></span></span></label>
     </div>
     <div id="mode-text">
+      <button id="btn-paste" class="tinted big paste-btn" type="button" hidden><span class="ms" aria-hidden="true">content_paste</span><span data-i18n="paste_check"></span></button>
       <label class="label" for="msg" id="msg-label" data-i18n="check_label"></label>
       <p class="note" id="ocr-review" data-i18n="ocr_review" hidden></p>
       <textarea id="msg" maxlength="4000" autocomplete="off" spellcheck="false"></textarea>
@@ -119,21 +139,25 @@
     <div id="verdict" class="verdict" role="status" aria-live="polite"></div>
     <h2 id="headline" tabindex="-1"></h2>
     <div id="qr-box" class="qr-box" hidden></div>
+    <details id="checked" class="checked" hidden><summary data-i18n="checked_msg"></summary><p id="checked-text"></p></details>
     <div id="explain" class="explain loading">
       <span class="explain-title" data-i18n="in_simple_words"></span>
       <p id="explain-text"></p>
     </div>
-    <h3 data-i18n="why"></h3>
-    <ul id="reasons" class="reasons"></ul>
     <h3 data-i18n="what_to_do"></h3>
     <ol id="actions" class="actions"></ol>
     <div class="cta-row result-actions">
       <a id="btn-1930" class="danger wide" href="tel:1930"><span class="ms" aria-hidden="true">call</span><span data-i18n="call_1930"></span></a>
       <button id="btn-speak" class="tinted" type="button"><span class="ms" aria-hidden="true">volume_up</span><span data-i18n="speak_btn"></span></button>
+      <button id="btn-share" class="tinted" type="button" hidden><span class="ms" aria-hidden="true">share</span><span data-i18n="share_btn"></span></button>
+    </div>
+    <h3 data-i18n="why"></h3>
+    <ul id="reasons" class="reasons"></ul>
+    <div class="cta-row">
       <button id="btn-complaint" class="secondary" type="button"><span class="ms" aria-hidden="true">description</span><span data-i18n="complaint_btn"></span></button>
       <button id="btn-real-benefits" class="tinted wide" data-go="benefits" type="button" hidden><span class="ms" aria-hidden="true">account_balance</span><span data-i18n="real_benefits"></span></button>
       <button id="btn-agent-check" class="secondary wide" type="button"><span class="ms" aria-hidden="true">support_agent</span><span data-i18n="ask_agent"></span></button>
-      <button class="secondary wide" data-go="check" type="button"><span class="ms" aria-hidden="true">refresh</span><span data-i18n="check_another"></span></button>
+      <button id="btn-check-another" class="secondary wide" data-go="check" type="button"><span class="ms" aria-hidden="true">refresh</span><span data-i18n="check_another"></span></button>
     </div>
     <button id="safety-badge" class="safety" type="button" aria-expanded="false" aria-controls="safety-detail" hidden></button>
     <div id="safety-detail" class="safety-detail" hidden></div>
@@ -209,6 +233,7 @@
     <div id="nav-summary" class="nav-summary" role="status" aria-live="polite" tabindex="-1"></div>
     <div id="nav-health"></div>
     <div id="nav-groups"></div>
+    <div id="nav-docs"></div>
     <p class="note" id="nav-amount-note"></p>
     <p class="note warn" id="nav-fraud-note"></p>
     <div class="cta-row">

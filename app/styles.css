@@ -66,6 +66,7 @@
   --hero-ink: #0B0B0C;
   --hero-ink-2: rgba(11, 11, 12, .72);
   --hero-metal: linear-gradient(170deg, #D6C2A0 0%, #A98D5F 38%, #7E5D45 72%, #B89C70 100%);
+  --hero-pill: rgba(11, 11, 12, .06);
   --silk: radial-gradient(160% 120% at 105% 110%, rgba(0,0,0,0) 0 36%, rgba(255,255,255,.7) 37%, rgba(0,0,0,0) 39.5%),
     radial-gradient(150% 110% at 115% 125%, #9BA5AD 0 30%, rgba(155,165,173,0) 30.6%),
     radial-gradient(130% 120% at 100% 130%, #C9C3CF 0 44%, rgba(201,195,207,0) 44.6%),
@@ -111,6 +112,7 @@
     --scrim: rgba(0, 0, 0, .55);
     --hero-glass: rgba(28, 26, 34, .46); --hero-ink: #FFFFFF; --hero-ink-2: rgba(255, 255, 255, .84);
     --hero-metal: linear-gradient(170deg, #FAFBF6 0%, #E2D2BE 32%, #A98D5F 64%, #FAFBF6 100%);
+    --hero-pill: rgba(255, 255, 255, .14);
     --silk: radial-gradient(160% 120% at 105% 110%, rgba(0,0,0,0) 0 36%, rgba(250,251,246,.5) 37%, rgba(0,0,0,0) 39.5%),
       radial-gradient(150% 110% at 115% 125%, #25202F 0 30%, rgba(37,32,47,0) 30.6%),
       radial-gradient(130% 120% at 100% 130%, #4F5069 0 44%, rgba(79,80,105,0) 44.6%),
@@ -138,6 +140,7 @@
   --scrim: rgba(0, 0, 0, .55);
   --hero-glass: rgba(28, 26, 34, .46); --hero-ink: #FFFFFF; --hero-ink-2: rgba(255, 255, 255, .84);
     --hero-metal: linear-gradient(170deg, #FAFBF6 0%, #E2D2BE 32%, #A98D5F 64%, #FAFBF6 100%);
+    --hero-pill: rgba(255, 255, 255, .14);
   --silk: radial-gradient(160% 120% at 105% 110%, rgba(0,0,0,0) 0 36%, rgba(250,251,246,.5) 37%, rgba(0,0,0,0) 39.5%),
     radial-gradient(150% 110% at 115% 125%, #25202F 0 30%, rgba(37,32,47,0) 30.6%),
     radial-gradient(130% 120% at 100% 130%, #4F5069 0 44%, rgba(79,80,105,0) 44.6%),
@@ -308,7 +311,7 @@ main { max-width: 600px; margin: 0 auto; padding: 4px 16px 28px; }
 .primary[disabled], .tinted[disabled], .secondary[disabled], .danger[disabled] {
   background: var(--fill-3); color: var(--label-3); box-shadow: none; cursor: not-allowed; filter: none; transform: none;
 }
-.primary.big, .danger.big { width: 100%; min-height: 60px; border-radius: 30px; font-size: 1.1875rem; margin-top: 18px; }
+.primary.big, .danger.big, .tinted.big { width: 100%; min-height: 60px; border-radius: 30px; font-size: 1.1875rem; margin-top: 18px; }
 .primary.loading .ms { display: none; }
 .primary.loading::before {
   content: ""; width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid currentColor;
@@ -394,11 +397,11 @@ select { background-image: none; padding-right: 16px; }
 /* ================================================================ HOME */
 .hero {
   position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
-  min-height: 318px; padding: 14px; margin-top: 2px; border-radius: 34px; background: var(--silk);
+  min-height: 362px; padding: 14px; margin-top: 2px; border-radius: 34px; background: var(--silk);
   box-shadow: var(--e2);
 }
 .hero-mark {
-  position: absolute; right: 18px; top: 12px; font-size: 124px; line-height: 1; width: auto; height: auto; overflow: visible;
+  position: absolute; right: 20px; top: 12px; font-size: 108px; line-height: 1; width: auto; height: auto; overflow: visible;
   transform: rotate(-8deg);
   font-variation-settings: "FILL" 1, "wght" 500; pointer-events: none;
   background: var(--hero-metal);
@@ -416,6 +419,15 @@ select { background-image: none; padding-right: 16px; }
 .hero h1 { margin: 0; font-size: 2.125rem; line-height: 1.12; font-weight: 700; letter-spacing: var(--trk-hero); }
 .hero .sub { margin: 10px 0 0; color: var(--hero-ink-2); font-size: 1.0625rem; }
 .tiles { display: grid; gap: 12px; margin-top: 14px; }
+.trust { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.trust li {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 12px 4px 8px; border-radius: 15px;
+  background: var(--hero-pill); color: var(--hero-ink); font-size: .8125rem; font-weight: 600; line-height: 1.2;
+}
+.trust .ms { font-size: 1.125rem; font-variation-settings: "FILL" 1, "wght" 500; }
+.tile-install .tile-icon { background: radial-gradient(90% 80% at 20% 10%, #E2D2BE 0%, rgba(226,210,190,0) 60%), linear-gradient(135deg, #7E5D45 0%, #A98D5F 30%, #927A72 60%, #4F5069 100%); }
+.paste-btn.big { margin: 0 0 22px; }
+.settings-label { margin: 8px 4px 0; font-size: .875rem; font-weight: 600; color: var(--label-2); }
 .tile {
   display: flex; align-items: center; gap: 16px; width: 100%; min-height: 100px; padding: 16px 14px 16px 16px;
   border: 0; border-radius: 26px; background: var(--card); box-shadow: var(--e1); color: var(--label);
@@ -563,7 +575,20 @@ details.extra .label { margin-top: 8px; }
   display: grid; place-items: center; width: 30px; height: 30px; border-radius: 15px;
   background: var(--tint-fill); color: var(--on-tint); font: 700 .9375rem/1 var(--font); font-variant-numeric: tabular-nums;
 }
-.result-actions { margin-top: 28px; }
+.result-actions { margin-top: 16px; }
+/* the first thing to do stands out from the rest */
+.actions li:first-child { background: var(--tint-soft); }
+.actions li:first-child > span:first-child { font-weight: 650; }
+details.checked { margin-top: 16px; border-radius: 20px; background: var(--card); box-shadow: var(--e1); overflow: hidden; }
+details.checked > summary {
+  list-style: none; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px;
+  font-size: .9375rem; font-weight: 600; color: var(--label-2); cursor: pointer;
+}
+details.checked > summary::-webkit-details-marker { display: none; }
+details.checked > summary::before { content: "sms"; font: normal 1.375rem/1 var(--icons); color: var(--tint); }
+details.checked > summary::after { content: "expand_more"; margin-left: auto; font: normal 1.375rem/1 var(--icons); transition: transform .3s var(--ease); }
+details.checked[open] > summary::after { transform: rotate(180deg); }
+details.checked p { margin: 0; padding: 0 16px 16px; white-space: pre-wrap; font-size: .9375rem; line-height: 1.5; }
 #btn-1930 { flex-basis: 100%; min-height: 60px; border-radius: 30px; font-size: 1.125rem; }
 .safety {
   display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 22px; padding: 0 16px 0 12px;
@@ -742,6 +767,20 @@ details.group[open] > summary::after { transform: rotate(180deg); }
 }
 .have input { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--tint-fill); }
 
+/* every paper to carry, once */
+.docs-all { margin-top: 30px; padding: 20px 20px 10px; border-radius: 26px; background: var(--card); box-shadow: var(--e1); }
+.docs-all-title { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; line-height: 1.3; font-weight: 700; letter-spacing: var(--trk-t3); }
+.docs-all-title::before { content: "badge"; font: normal 1.625rem/1 var(--icons); font-variation-settings: "FILL" 1, "wght" 400; color: var(--tint); }
+.docs-all-sub { margin: 4px 0 6px; font-size: .9375rem; color: var(--label-2); }
+.docs-all .docs li { padding: 12px 0; box-shadow: inset 0 -1px 0 var(--sep); font-size: 1.0625rem; }
+.docs-all .docs li:last-child { box-shadow: none; }
+.docs-all .docs li::before { display: none; }
+.docs-all .docs label { display: flex; align-items: flex-start; gap: 14px; width: 100%; cursor: pointer; }
+.docs-all .docs input { flex: none; width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--go); }
+.docs-all .docs input:checked + span { color: var(--label-2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.docs-all .docs li > label > span { display: flex; flex-direction: column; gap: 2px; }
+.docs-all .docs small { font-size: .8125rem; color: var(--label-2); }
+
 /* the slip looks like paper in both appearances */
 .slip-sheet {
   padding: 22px 20px; border-radius: 22px; font-size: .9375rem; line-height: 1.5; color: #0B0B0C; background: #FFFFFF;
@@ -824,6 +863,11 @@ details.group[open] > summary::after { transform: rotate(180deg); }
 .qrs figcaption { max-width: 168px; margin-top: 8px; color: #0B0B0C; font: 600 .8125rem/1.4 var(--mono); overflow-wrap: anywhere; }
 .node-panel .note { margin: 16px 0 14px; }
 
+/* ================================================================ TEXT SIZE (set in Voice and text size) */
+/* Rosh 27's larger-text steps: everything in the content grows together, so rows reflow instead of truncating */
+:root[data-text-size="large"] main, :root[data-text-size="large"] .foot, :root[data-text-size="large"] .ticket-sheet { zoom: 1.12; }
+:root[data-text-size="xl"] main, :root[data-text-size="xl"] .foot, :root[data-text-size="xl"] .ticket-sheet { zoom: 1.25; }
+
 /* ================================================================ PRINT: only what is being printed */
 @media print {
   /* paper is always light, whatever the phone's appearance */
@@ -836,7 +880,7 @@ details.group[open] > summary::after { transform: rotate(180deg); }
   }
   .topbar, .foot, .screen:not(.printing), .no-print, .toast, .ticket-sheet { display: none !important; }
   html, body { background: #FFFFFF; color: #000000; }
-  main { max-width: none; padding: 0; }
+  main { max-width: none; padding: 0; zoom: 1 !important; }
   .screen { animation: none; }
   .printing input, .printing textarea { box-shadow: none; border: 1px solid #999999; background: #FFFFFF; color: #000000; }
   .printing .screen-head .back { display: none; }

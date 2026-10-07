@@ -43,7 +43,7 @@
       ocr_review: "स्क्रीनशॉट से यह पढ़ा गया। गलती हो तो ठीक करें, फिर जाँचें।",
       ask_agent: "एजेंट से पूछें (काउंटर पर)", ticket_title: "आपका नंबर", ticket_sub: "काउंटर पर एजेंट आपका नंबर बुलाएँगे। तब तक यह स्क्रीन खुली रखें।",
       ticket_ok: "ठीक है", agent_offline: "अभी कोई एजेंट नहीं जुड़ा। काउंटर पर जाकर पूछें।",
-      voice_settings: "आवाज़ की सेटिंग", voice_female: "महिला आवाज़", voice_male: "पुरुष आवाज़",
+      voice_settings: "आवाज़ और अक्षर", voice_female: "महिला आवाज़", voice_male: "पुरुष आवाज़",
       speed_normal: "सामान्य गति", speed_slow: "धीमी गति", sound_on: "स्क्रीन पढ़कर सुनाना चालू", sound_off: "स्क्रीन पढ़कर सुनाना बंद",
       voice_ready: "आवाज़ इसी नोड पर चलती है: सुनना और बोलना, बिना इंटरनेट।",
       voice_phone: "नोड की आवाज़ नहीं मिली; फ़ोन की अपनी आवाज़ इस्तेमाल हो रही है।",
@@ -75,6 +75,17 @@
       slip_title: "सहायक — योजना पर्ची", slip_answers: "जवाब", slip_schemes: "योजनाएँ", slip_date: "तारीख",
       slip_no_name: "नाम नहीं रखा गया", slip_qr: "QR कोड, जिसमें ये जवाब हैं",
       slip_operator: "CSC ऑपरेटर: QR में यही जवाब हैं, दोबारा पूछने की ज़रूरत नहीं।",
+      trust_offline: "इंटरनेट नहीं चाहिए", trust_private: "आपका नाम नहीं पूछता", trust_voice: "पढ़कर सुनाता है",
+      install_title: "सहायक को होम स्क्रीन पर रखें", install_sub: "एक बार रखें, फिर बिना इंटरनेट भी खुलेगा",
+      text_size: "अक्षरों का आकार", size_normal: "सामान्य", size_large: "बड़ा", size_xl: "सबसे बड़ा",
+      voice_label: "आवाज़", speed_label: "बोलने की गति",
+      paste_check: "मैसेज चिपकाकर जाँचें",
+      paste_empty: "कॉपी किया हुआ कोई मैसेज नहीं मिला। SMS में मैसेज को दबाकर रखें और कॉपी करें।",
+      paste_denied: "चिपकाने की अनुमति नहीं मिली। नीचे के बॉक्स को दबाकर रखें और चिपकाएँ (Paste) चुनें।",
+      checked_msg: "जाँचा गया मैसेज", share_btn: "परिवार को सावधान करें", share_intro: "सहायक ने एक मैसेज जाँचा",
+      share_try: "आप भी जाँचें, बिना इंटरनेट:",
+      docs_all_title: "CSC पर ये कागज़ साथ ले जाएँ", docs_all_sub: "ऊपर की सभी योजनाओं के लिए एक सूची",
+      docs_for_n: "{n} योजनाओं के लिए", docs_for_one: "{name} के लिए",
     },
     en: {
       node_pill: "Offline", node_pill_phone: "On phone · offline",
@@ -115,7 +126,7 @@
       ocr_review: "This is what I read from the screenshot. Fix any mistakes, then check.",
       ask_agent: "Ask the agent (at the counter)", ticket_title: "Your number", ticket_sub: "The agent at the counter will call your number. Keep this screen open until then.",
       ticket_ok: "OK", agent_offline: "No agent is connected right now. Please ask at the counter.",
-      voice_settings: "Voice settings", voice_female: "Female voice", voice_male: "Male voice",
+      voice_settings: "Voice and text size", voice_female: "Female voice", voice_male: "Male voice",
       speed_normal: "Normal speed", speed_slow: "Slower", sound_on: "Reading screens aloud: on", sound_off: "Reading screens aloud: off",
       voice_ready: "Voice runs on this node: listening and speaking, without internet.",
       voice_phone: "No voice on the node; using the phone's own voice.",
@@ -147,6 +158,17 @@
       slip_title: "Sahayak scheme slip", slip_answers: "Answers", slip_schemes: "Schemes", slip_date: "Date",
       slip_no_name: "No name kept", slip_qr: "QR code holding these answers",
       slip_operator: "CSC operator: the QR holds these answers, so there is no need to ask again.",
+      trust_offline: "No internet needed", trust_private: "Never asks your name", trust_voice: "Reads it out loud",
+      install_title: "Keep Sahayak on your home screen", install_sub: "Add it once; it opens without internet too",
+      text_size: "Text size", size_normal: "Normal", size_large: "Large", size_xl: "Largest",
+      voice_label: "Voice", speed_label: "Speaking speed",
+      paste_check: "Paste and check",
+      paste_empty: "Nothing is copied yet. In your SMS app, press and hold the message, then tap Copy.",
+      paste_denied: "Paste was not allowed. Press and hold the box below, then choose Paste.",
+      checked_msg: "The message checked", share_btn: "Warn your family", share_intro: "Sahayak checked a message",
+      share_try: "Check yours too, no internet needed:",
+      docs_all_title: "Take these papers to the CSC", docs_all_sub: "One list for every scheme above",
+      docs_for_n: "for {n} schemes", docs_for_one: "for {name}",
     },
   };
 
@@ -345,6 +367,7 @@
     $("#image-btn-label").textContent = t(mode === "qr" ? "qr_btn" : "ocr_btn");
     const input = $("#image-input");
     if (mode === "qr") input.setAttribute("capture", "environment"); else input.removeAttribute("capture");
+    $("#btn-paste").hidden = !canPaste || mode !== "text";
     $("#qr-try-label").hidden = mode !== "qr";
     $("#qr-examples").hidden = mode !== "qr";
   }
@@ -418,6 +441,7 @@
       renderResult(card);
       go("result");
       $("#headline").focus();
+      buzz(card);
       if (voice.auto) speak(joinSpoken([card.label[state.lang], ...(card.qr.facts || []).map((f) => f[state.lang])]));
     } catch (e) {
       toast(t(e.status === 422 ? "qr_none" : e.status === 501 ? "qr_no_detector" : "err_network"));
@@ -511,6 +535,7 @@
       renderResult(card);
       go("result");
       $("#headline").focus();
+      buzz(card);
       if (voice.auto) speak(spokenSummary(card), state.lang);
       if (card.where !== "phone") explain(card.id);  // the vetted reasons already explain a phone check
     } catch {
@@ -575,6 +600,9 @@
     const schemeBait = card.signals.some((s) => s.id === "govt_scheme_bait")
       || ["govt_scheme", "govt_payment"].includes(card.category && card.category.id);
     $("#btn-real-benefits").hidden = !(schemeBait && card.verdict !== "no_signs");
+    $("#btn-share").hidden = !canShare || !["scam", "suspicious"].includes(card.verdict);
+    $("#checked").hidden = !state.message;
+    $("#checked-text").textContent = state.message;
     renderExplanation();
     renderMeta();
   }
@@ -885,6 +913,79 @@
     if (!speak(text, state.lang)) toast(t("no_voice"));
   });
 
+  // ---------------------------------------------------------------- fewer steps for the person
+  // Paste and check in one tap (the browser allows reading the clipboard only on a secure page, after a tap).
+  const canPaste = Boolean(window.isSecureContext && navigator.clipboard && navigator.clipboard.readText);
+  $("#btn-paste").addEventListener("click", async () => {
+    let text = "";
+    try { text = (await navigator.clipboard.readText()).trim(); } catch { toast(t("paste_denied")); $("#msg").focus(); return; }
+    if (!text) { toast(t("paste_empty")); return; }
+    $("#msg").value = text.slice(0, 4000);
+    runCheck();
+  });
+
+  // "Check another" starts with an empty box; the back arrow keeps the message for editing.
+  $("#btn-check-another").addEventListener("click", () => {
+    $("#msg").value = "";
+    $("#sender").value = "";
+    $("details.extra").open = false;
+    setMode("text");
+  });
+
+  // A short buzz when the verdict is Scam: felt even before it is read (phones that can vibrate).
+  function buzz(card) {
+    if (card.verdict === "scam" && navigator.vibrate) {
+      try { navigator.vibrate([180, 90, 180]); } catch { /* not allowed here */ }
+    }
+  }
+
+  // Warn the family: the verdict and the advice, never the message itself. The person chooses where it goes.
+  const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  const canShare = Boolean(navigator.share) || mobile;
+  function shareText() {
+    const card = state.check;
+    const stop = state.lang === "hi" ? "।" : ".";
+    const lines = [`${t("share_intro")}: ${card.label[state.lang]}${stop}`, card.headline[state.lang], ...card.actions[state.lang].slice(0, 2)];
+    if (STANDALONE) lines.push(`${t("share_try")} ${location.origin}${location.pathname}`);
+    return lines.join("\n");
+  }
+  $("#btn-share").addEventListener("click", async () => {
+    if (!state.check) return;
+    const text = shareText();
+    if (navigator.share) {
+      try { await navigator.share({ text }); } catch { /* the person closed the share sheet */ }
+      return;
+    }
+    location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;  // a plain-HTTP node page cannot use the share sheet
+  });
+
+  // Text size, kept on this phone: Rosh 27's larger-text steps for people who find the screen hard to read.
+  function applyTextSize(size) {
+    document.documentElement.dataset.textSize = size;
+    $$('input[name="tsize"]').forEach((r) => { r.checked = r.value === size; });
+  }
+  applyTextSize(loadPref("sahayak.textsize", "normal"));
+  $$('input[name="tsize"]').forEach((r) => r.addEventListener("change", () => {
+    savePref("sahayak.textsize", r.value);
+    applyTextSize(r.value);
+  }));
+
+  // Keep it on the home screen: where the browser offers it (Chrome on Android, over HTTPS), one tap.
+  let installPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    $("#btn-install").hidden = false;
+  });
+  $("#btn-install").addEventListener("click", async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    try { await installPrompt.userChoice; } catch { /* dismissed */ }
+    installPrompt = null;
+    $("#btn-install").hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { $("#btn-install").hidden = true; });
+
   // ---------------------------------------------------------------- complaint draft
   $("#btn-complaint").addEventListener("click", () => {
     const card = state.check;
@@ -1161,9 +1262,31 @@
       return el("section", { class: `group g-${g}` }, el("h3", {}, t(`g_${g}`), el("span", { class: "count" }, String(cards.length))), cards);
     });
     $("#nav-groups").replaceChildren(...blocks);
+    renderDocsList(r, byId);
     $("#nav-amount-note").textContent = tr(r.notes.amount);
     $("#nav-fraud-note").textContent = tr(r.notes.fraud);
     $("#nav-meta").textContent = `${r.asked} ${t("questions_asked")} · ${t("pack")} ${r.pack.name} v${r.pack.version} · ${r.timing_ms} ${t("ms")}`;
+  }
+
+  // Every paper the schemes worth a visit ask for, once each, the most needed first: one list to carry to the CSC.
+  function renderDocsList(r, byId) {
+    const docs = new Map();
+    for (const id of ["eligible", "likely", "check"].flatMap((g) => r.groups[g])) {
+      for (const d of byId[id].documents) {
+        const key = (d.en || "").split(" (")[0].trim().toLowerCase();
+        const entry = docs.get(key) || { d, schemes: [] };
+        if (!entry.schemes.includes(byId[id].short)) entry.schemes.push(byId[id].short);
+        docs.set(key, entry);
+      }
+    }
+    const list = [...docs.values()].sort((a, b) => b.schemes.length - a.schemes.length);
+    $("#nav-docs").replaceChildren(...(list.length ? [el("section", { class: "docs-all" },
+      el("div", { class: "docs-all-title" }, t("docs_all_title")),
+      el("p", { class: "docs-all-sub" }, t("docs_all_sub")),
+      el("ul", { class: "docs" }, list.map(({ d, schemes }) => el("li", {}, el("label", {},  // tick each paper off as it is found
+        el("input", { type: "checkbox" }),
+        el("span", {}, tr(d), el("small", {}, schemes.length > 1 ? fmt(t("docs_for_n"), { n: schemes.length })
+          : fmt(t("docs_for_one"), { name: schemes[0] }))))))))] : []));
   }
 
   function schemeCard(s) {
