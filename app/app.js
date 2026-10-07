@@ -8,7 +8,7 @@
       node_pill: "बिना इंटरनेट", node_pill_phone: "फ़ोन पर · बिना इंटरनेट",
       foot_phone: "सहायक इसी फ़ोन पर चल रहा है। आप जो लिखते हैं, वह फ़ोन से बाहर नहीं जाता।",
       phone_mode_note: "अभी नोड से नहीं जुड़े: जाँच इसी फ़ोन पर होती है और कुछ भी बाहर नहीं जाता। बोलकर पूछने और एजेंट से मदद के लिए CSC के Wi-Fi पर आएँ।",
-      checked_phone: "इस फ़ोन पर जाँच", qr_no_detector: "यह फ़ोन नोड के बिना QR नहीं पढ़ सकता। CSC पर आकर जाँचें, या QR के साथ लिखा मैसेज लिखकर जाँचें।",
+      checked_phone: "इस फ़ोन पर जाँच", pack_old: "जाँच के नियम {days} दिन पुराने हैं; CSC पर फ़ोन अपडेट कराएं", qr_no_detector: "यह फ़ोन नोड के बिना QR नहीं पढ़ सकता। CSC पर आकर जाँचें, या QR के साथ लिखा मैसेज लिखकर जाँचें।",
       home_title: "नमस्ते! मैं सहायक हूँ।",
       home_sub: "मैं मैसेज में ठगी पकड़ सकता हूँ और बता सकता हूँ कि आपका हक क्या है, बिना इंटरनेट के।",
       tile_check: "मैसेज जाँचें", tile_check_sub: "क्या यह ठगी है?",
@@ -20,8 +20,8 @@
       check_btn: "जाँचें", checking: "जाँच हो रही है…", try_examples: "या एक उदाहरण आज़माएँ:",
       in_simple_words: "आसान शब्दों में", explaining: "सहायक समझा रहा है…",
       why: "क्यों?", what_to_do: "अब क्या करें?",
-      call_1930: "1930 पर कॉल करें", speak_btn: "सुनें", complaint_btn: "शिकायत का ड्राफ़्ट", check_another: "दूसरा मैसेज जाँचें",
-      safety_ok: "✓ सुरक्षा जाँच पूरी", safety_checks: "जाँचें जो चलीं:",
+      call_1930: "पैसे गए? 1930 पर कॉल करें", speak_btn: "सुनें", complaint_btn: "शिकायत का ड्राफ़्ट", check_another: "दूसरा मैसेज जाँचें",
+      safety_ok: "यह जवाब कैसे जाँचा गया", safety_checks: "जाँचें जो चलीं:",
       complaint_title: "1930 शिकायत का ड्राफ़्ट",
       complaint_note: "यह ड्राफ़्ट इसी फ़ोन पर बनता है। 1930 पर कॉल करते समय या cybercrime.gov.in पर शिकायत करते समय इसे काम में लें।",
       c_when: "कब हुआ", c_channel: "कैसे आया (SMS, कॉल, WhatsApp)", c_number: "ठग का नंबर", c_upi: "UPI ID (अगर हो)",
@@ -80,7 +80,7 @@
       node_pill: "Offline", node_pill_phone: "On phone · offline",
       foot_phone: "Sahayak is running on this phone. Nothing you type leaves it.",
       phone_mode_note: "Not connected to the node: checks run on this phone and nothing leaves it. For voice and help from the agent, come to the CSC's Wi-Fi.",
-      checked_phone: "Checked on this phone in", qr_no_detector: "This phone cannot read QR codes without the node. Check it at the CSC, or type the message that came with the QR.",
+      checked_phone: "Checked on this phone in", pack_old: "scam patterns are {days} days old; update this phone at the CSC", qr_no_detector: "This phone cannot read QR codes without the node. Check it at the CSC, or type the message that came with the QR.",
       home_title: "Namaste! I am Sahayak.",
       home_sub: "I can check a message for fraud and tell you what you are owed, without internet.",
       tile_check: "Check a message", tile_check_sub: "Is it a scam?",
@@ -92,8 +92,8 @@
       check_btn: "Check", checking: "Checking…", try_examples: "Or try an example:",
       in_simple_words: "In simple words", explaining: "Sahayak is explaining…",
       why: "Why?", what_to_do: "What to do now",
-      call_1930: "Call 1930", speak_btn: "Listen", complaint_btn: "Complaint draft", check_another: "Check another",
-      safety_ok: "✓ Safety checked", safety_checks: "Checks that ran:",
+      call_1930: "Lost money? Call 1930", speak_btn: "Listen", complaint_btn: "Complaint draft", check_another: "Check another",
+      safety_ok: "How this answer was checked", safety_checks: "Checks that ran:",
       complaint_title: "1930 complaint draft",
       complaint_note: "This draft stays on this device. Use it when you call 1930 or file at cybercrime.gov.in.",
       c_when: "When did it happen", c_channel: "How it came (SMS, call, WhatsApp)", c_number: "Fraudster's number",
@@ -154,6 +154,7 @@
     scam: '<svg viewBox="0 0 52 52" aria-hidden="true"><path d="M26 3 6 10v14c0 13 9 22 20 26 11-4 20-13 20-26V10L26 3Z" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="2.5"/><path d="M19 19l14 14M33 19 19 33" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
     suspicious: '<svg viewBox="0 0 52 52" aria-hidden="true"><path d="M26 5 3 46h46L26 5Z" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M26 20v13" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="39" r="2.6" fill="currentColor"/></svg>',
     no_signs: '<svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="2.5"/><path d="M16 26.5l7 7 13-14" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    unreadable: '<svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="currentColor" opacity=".12" stroke="currentColor" stroke-width="2.5"/><path d="M20 20.5a6 6 0 1 1 8.6 5.4c-1.7.8-2.6 2-2.6 3.8V31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="37.5" r="2.6" fill="currentColor"/></svg>',
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -354,11 +355,32 @@
     setMode(r.value);
   }));
 
+  // Phone cameras make photos of 3 to 12 MB; the node reads QR codes and text at under 2,000 pixels
+  // anyway, so a large photo is shrunk here first: a much quicker upload on a busy Wi-Fi.
+  async function shrinkPhoto(blob, longest = 2000) {
+    try {
+      if (blob.size < 1500000 || !("createImageBitmap" in window)) return blob;
+      const bmp = await createImageBitmap(blob);
+      const scale = longest / Math.max(bmp.width, bmp.height);
+      if (scale >= 1) { bmp.close(); return blob; }
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bmp.width * scale);
+      canvas.height = Math.round(bmp.height * scale);
+      canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      bmp.close();
+      const out = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+      return out || blob;
+    } catch {
+      return blob;  // the node shrinks it too, and refuses only what no camera makes
+    }
+  }
+
   async function postImage(path, blob) {
     if (STANDALONE || Date.now() < nodeRetryAt) throw new NodeUnreachable(path);
+    const body = await shrinkPhoto(blob);
     let res;
     try {
-      res = await fetch(path, { method: "POST", headers: { "Content-Type": blob.type || "application/octet-stream" }, body: blob });
+      res = await fetch(path, { method: "POST", headers: { "Content-Type": body.type || "application/octet-stream" }, body });
     } catch {
       throw new NodeUnreachable(path);
     }
@@ -547,8 +569,10 @@
     $("#reasons").replaceChildren(...card.reasons.map((r) => bilingualItem(r.text, r.hard ? "hard" : "")));
     $("#actions").replaceChildren(...card.actions[state.lang].map((a, i) =>
       bilingualItem({ [state.lang]: a, [other(state.lang)]: card.actions[other(state.lang)][i] })));
-    $("#btn-1930").hidden = card.verdict === "no_signs";
-    $("#btn-complaint").hidden = card.verdict === "no_signs";
+    // 1930 is for money already lost, and a complaint needs a message Sahayak could read and found signs in.
+    const nothingFound = card.verdict === "no_signs" || card.verdict === "unreadable";
+    $("#btn-1930").hidden = nothingFound;
+    $("#btn-complaint").hidden = nothingFound;
     // A fake scheme message: offer the real thing, checked safely on this node.
     const schemeBait = card.signals.some((s) => s.id === "govt_scheme_bait")
       || ["govt_scheme", "govt_payment"].includes(card.category && card.category.id);
@@ -614,6 +638,10 @@
     if (!card) return;
     const parts = [`${t(card.where === "phone" ? "checked_phone" : "checked_in")} ${card.timing_ms.total} ${t("ms")}`,
       `${t("pack")} ${card.pack.version}`];
+    // Away from the node the phone checks with the patterns it last fetched; say when they are getting old.
+    const fraud = card.where === "phone" ? local.packs.find((p) => p.name === "fraud") : null;
+    const days = fraud && fraud.date ? Math.floor((Date.now() - Date.parse(fraud.date)) / 86400000) : 0;
+    if (days > 45) parts.push(fmt(t("pack_old"), { days }));
     const out = state.explanation;
     if (modelWrote(out, state.lang) && out.tokens_per_s) parts.push(`${out.model} · ${out.tokens_per_s} tok/s`);
     $("#meta").textContent = parts.join(" · ");
@@ -649,14 +677,31 @@
       .flatMap((s) => (s.length > 480 ? s.match(/[\s\S]{1,460}(\s|$)/g) : [s]));
   }
 
-  async function ttsBlob(text, lang) {
-    const res = await fetch("/api/tts", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, lang, voice: voice.gender, speed: voice.slow ? 0.75 : 0.9 }),
-    });
-    if (res.status === 503) voice.nodeOk = false;
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.blob();
+  // A node speaking for many phones at once can take seconds over a sentence it has not said before.
+  // If the first sentence of a screen is not back in time, this phone reads the screen in its own voice.
+  const FIRST_SENTENCE_MS = 4000;
+
+  async function ttsBlob(text, lang, ms = 0) {
+    const ctrl = "AbortController" in window ? new AbortController() : null;
+    const timer = ms && ctrl ? setTimeout(() => ctrl.abort(), ms) : null;
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, lang, voice: voice.gender, speed: voice.slow ? 0.75 : 0.9 }),
+        signal: ctrl ? ctrl.signal : undefined,
+      });
+      if (res.status === 503) voice.nodeOk = false;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.blob();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function phoneVoice(lang) {
+    if (!("speechSynthesis" in window)) return null;
+    const want = lang === "hi" ? "hi" : "en";
+    return window.speechSynthesis.getVoices().find((vo) => vo.lang && vo.lang.toLowerCase().startsWith(want)) || null;
   }
 
   function playBlob(blob, token) {
@@ -679,7 +724,7 @@
     synth.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang === "hi" ? "hi-IN" : "en-IN";
-    const v = synth.getVoices().find((vo) => vo.lang && vo.lang.toLowerCase().startsWith(lang === "hi" ? "hi" : "en"));
+    const v = phoneVoice(lang);
     if (v) u.voice = v;
     u.rate = voice.slow ? 0.75 : 0.92;
     synth.speak(u);
@@ -694,7 +739,13 @@
     if (!voice.nodeOk) return phoneSpeak(text, lang);
     const token = voice.token;
     const parts = splitSentences(text);
-    const fetchPart = (i) => { const p = ttsBlob(parts[i], lang); p.catch(() => {}); return p; };
+    // Only the first sentence has a deadline (later ones are fetched while the one before plays), and
+    // only when the phone has a voice of its own for this language to take over with.
+    const fetchPart = (i) => {
+      const p = ttsBlob(parts[i], lang, i === 0 && phoneVoice(lang) ? FIRST_SENTENCE_MS : 0);
+      p.catch(() => {});
+      return p;
+    };
     (async () => {
       let next = fetchPart(0);
       for (let i = 0; i < parts.length; i += 1) {
@@ -1241,6 +1292,11 @@
   // secure page: the node's HTTPS address, or the stand-alone build on an HTTPS site).
   if ("serviceWorker" in navigator && window.isSecureContext) {
     navigator.serviceWorker.register(`${ROOT}sw.js`).catch(() => {});
+    // Ask the browser to keep the offline copy when the phone runs short of space. Chrome and Safari decide
+    // quietly; Firefox would ask the person, so it is not asked there.
+    if (navigator.storage && navigator.storage.persist && !/Firefox\//.test(navigator.userAgent)) {
+      navigator.storage.persisted().then((kept) => kept || navigator.storage.persist()).catch(() => {});
+    }
   }
 
   // Deep links: ?lang=en, ?screen=check|benefits, ?demo=<example id>, ?nav=start|<persona id>.

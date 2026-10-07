@@ -165,6 +165,7 @@ details.extra summary { min-height: 44px; display: flex; align-items: center; co
 .verdict.scam { color: var(--scam); background: var(--scam-soft); }
 .verdict.suspicious { color: var(--warn); background: var(--warn-soft); }
 .verdict.no_signs { color: var(--ok); background: var(--ok-soft); }
+.verdict.unreadable { color: var(--ink-2); background: var(--surface-2); border: 1.5px dashed var(--line); }
 #headline { margin-top: 14px; }
 #headline:focus { outline: none; }
 .explain {
@@ -188,8 +189,8 @@ details.extra summary { min-height: 44px; display: flex; align-items: center; co
 }
 .safety {
   margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
-  padding: 8px 14px; border-radius: 999px; border: 1.5px solid color-mix(in srgb, var(--ok) 40%, var(--line));
-  background: var(--ok-soft); color: var(--ok); font-weight: 700; font-size: .85rem;
+  padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: transparent; color: var(--ink-2); font-weight: 600; font-size: .85rem;
 }
 .safety-detail { margin-top: 8px; font-size: .82rem; color: var(--ink-2); }
 .safety-detail ul { margin: 6px 0 0; padding-left: 18px; }

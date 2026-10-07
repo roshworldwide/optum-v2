@@ -637,16 +637,47 @@
   function extractTollfree(t) { return TOLLFREE_RE.finditer(t).map(function (m) { return digitsOnly(m.group(1)); }); }
   function extract1600(t) { return SERIES1600_RE.finditer(t).map(function (m) { return m.group(1); }); }
 
+  function amountValue(m) {
+    let value = Number(asciiDigits(m.group(1).split(",").join("") + (m.group(2) ? "." + m.group(2) : "")));
+    const unit = (m.group(3) || "").toLowerCase();
+    if (unit === "lakh" || unit === "lac" || unit === "लाख") value *= 1e5;
+    else if (unit === "crore" || unit === "cr" || unit === "करोड़" || unit === "करोड") value *= 1e7;
+    return value;
+  }
+
   function extractAmounts(t) {
-    const out = [];
+    return AMOUNT_RE.finditer(t).map(amountValue);
+  }
+
+  // Money at risk is what a message asks the reader to pay or send, not the prize, loan or "case" it names
+  // (normalize.py rupees_at_risk): each amount takes the nearest cue word in its sentence; a fee wins a tie.
+  const SENTENCE_END = new Rx(String.raw`[.!?।\n]`);
+  const PAY_CUE = new Rx(
+    String.raw`(?<![a-z])(?:pay|paying|payment|send|transfer|deposit|fees?|charges?|fine|penalty|bhejo|bhejein|bhejiye|bhej|` +
+    String.raw`jama|bharo|bharein|bharna|shulk)(?![a-z])|भेज|जमा|भुगतान|शुल्क|फीस|जुर्माना|चार्ज`);
+  const BAIT_CUE = new Rx(
+    String.raw`(?<![a-z])(?:won|win|winning|winner|prize|lottery|jackpot|reward|cashback|bonus|loan|limit|lucky|inaam|salary|` +
+    String.raw`earn|earning|income|profit|returns?)(?![a-z])|इनाम|जीत|लॉटरी|लोन|कमा|मुनाफ`);
+
+  function rupeesAtRisk(t) {
+    const demanded = [], plain = [];
     for (const m of AMOUNT_RE.finditer(t)) {
-      let value = Number(asciiDigits(m.group(1).split(",").join("") + (m.group(2) ? "." + m.group(2) : "")));
-      const unit = (m.group(3) || "").toLowerCase();
-      if (unit === "lakh" || unit === "lac" || unit === "लाख") value *= 1e5;
-      else if (unit === "crore" || unit === "cr" || unit === "करोड़" || unit === "करोड") value *= 1e7;
-      out.push(value);
+      let start = 0;
+      for (const b of SENTENCE_END.finditer(t, 0, m.start)) start = Math.max(start, b.end);
+      const after = SENTENCE_END.search(t, m.end);
+      const end = after ? after.start : t.len;
+      let nearest = null;  // [distance, kind]
+      for (const [kind, cue] of [["pay", PAY_CUE], ["bait", BAIT_CUE]]) {
+        for (const c of cue.finditer(t, start, end)) {
+          const d = c.end <= m.start ? m.start - c.end : Math.max(0, c.start - m.end);
+          if (nearest === null || d < nearest[0]) nearest = [d, kind];
+        }
+      }
+      if (nearest === null) plain.push(amountValue(m));
+      else if (nearest[1] === "pay") demanded.push(amountValue(m));
     }
-    return out;
+    const pool = demanded.length ? demanded : plain.length ? plain : [0.0];
+    return Math.max.apply(null, pool);
   }
 
   function extractUpiIds(t) {
@@ -690,6 +721,49 @@
     return "en";
   }
 
+  // Scripts Sahayak cannot read yet (normalize.py UNREAD_SCRIPTS): a message mostly in one of these gets
+  // "could not check", never "no scam signs".
+  const UNREAD_RANGES = [
+    ["bn", "\\u0980-\\u09ff"], ["pa", "\\u0a00-\\u0a7f"], ["gu", "\\u0a80-\\u0aff"], ["or", "\\u0b00-\\u0b7f"],
+    ["ta", "\\u0b80-\\u0bff"], ["te", "\\u0c00-\\u0c7f"], ["kn", "\\u0c80-\\u0cff"], ["ml", "\\u0d00-\\u0d7f"],
+    ["ur", "\\u0600-\\u06ff\\u0750-\\u077f\\ufb50-\\ufdff\\ufe70-\\ufeff"],
+    ["sat", "\\u1c50-\\u1c7f"], ["mni", "\\uabc0-\\uabff"],
+  ];
+  const UNREAD_SCRIPTS = UNREAD_RANGES.map(function (e) { return [e[0], new RegExp("^[" + e[1] + "]$", "u")]; });
+  // Letters of all of them, and the scripts Sahayak reads (signals.py _UNREAD_LETTER, _WORD_SCRIPT).
+  const UNREAD_LETTER = new RegExp("[" + UNREAD_RANGES.map(function (e) { return e[1]; }).join("") + "]", "u");
+  const WORD_SCRIPT = /[a-z\u0900-\u097f]/u;
+  const LETTER = /^\p{L}$/u;  // Python's str.isalpha(): Lu, Ll, Lt, Lm, Lo
+
+  // Marathi shares Hindi's script but not its everyday words; two of these, and more than Hindi's, mean Marathi.
+  const MARATHI_WORDS = new Set(("आहे आहेत नाही तुमचे तुमची तुमच्या तुम्ही आपले आपली आपल्या करा होईल जाईल झाले झाली केले " +
+    "आणि मध्ये साठी किंवा येथे लवकर").split(" "));
+  const HINDI_WORDS = new Set("है हैं नहीं आपका आपके आपकी करें करो में और का की के को से".split(" "));
+  const DEV_WORD = /[ऀ-ॿ]+/g;
+
+  /** The script (or, for Marathi, the language) of a message Sahayak cannot read: at least 8 of its letters,
+   *  and a quarter of them, in a script it does not know; or Devanagari that reads as Marathi. */
+  function unreadScript(text) {
+    const counts = UNREAD_SCRIPTS.map(function (e) { return [e[0], 0]; });
+    let letters = 0, unread = 0;
+    for (const ch of text) {
+      if (!LETTER.test(ch)) continue;
+      letters += 1;
+      for (let i = 0; i < UNREAD_SCRIPTS.length; i++) {
+        if (UNREAD_SCRIPTS[i][1].test(ch)) { counts[i][1] += 1; unread += 1; break; }
+      }
+    }
+    if (unread >= 8 && unread >= 0.25 * letters) {
+      let best = counts[0];
+      for (const c of counts) if (c[1] > best[1]) best = c;
+      return best[0];
+    }
+    const words = text.match(DEV_WORD) || [];
+    const marathi = words.filter(function (w) { return MARATHI_WORDS.has(w); }).length;
+    if (marathi >= 2 && marathi > words.filter(function (w) { return HINDI_WORDS.has(w); }).length) return "mr";
+    return null;
+  }
+
   // ---------------------------------------------------------------- context
 
   function buildContext(text, sender, inputType, prot) {
@@ -722,6 +796,7 @@
       amounts: extractAmounts(t),
       upiIds: extractUpiIds(t),
       mixedTokens: mixedScriptTokens(raw),
+      unread: unreadScript(raw),
       prot: prot,
     };
   }
@@ -810,11 +885,23 @@
     const m = SENTENCE_BREAK.search(t, end);
     return t.slice(s0, m ? m.start : t.len);
   }
+  /** Half or more of the sentence's words are in a script Sahayak cannot read, so a negation or warning
+   *  around an English word in it is invisible (signals.py _unreadable). */
+  function unreadable(sent) {
+    let unread = 0, readable = 0;
+    for (const w of pySplit(sent)) {
+      if (UNREAD_LETTER.test(w)) unread += 1;
+      else if (WORD_SCRIPT.test(w)) readable += 1;
+    }
+    return unread > 0 && unread >= readable;
+  }
 
   // Phrases that look like requests but are routine in genuine messages: you hand a code to
   // the delivery agent or the cab driver standing in front of you.
   const OTP_OK_CONTEXT = new Rx(
     String.raw`(?<![a-z])(delivery|deliver|driver|captain|ride|trip|cab|pickup|technician|डिलीवरी|ड्राइवर)`);
+  // A call between the handover and the request for the code: it was asked for on a later call, not at the door.
+  const CALL_WORD = new Rx(String.raw`(?<![a-z])(?:call|phone|rang(?![a-z]))|फोन|कॉल`);
   // A message that contains the code itself is delivering it; a fraudster does not know your code.
   const CODE_NEXT_TO_TERM = new Rx(
     String.raw`(?:otp|pin|code|ओटीपी|कोड)\D{0,12}(?<![\dx*•])\d{4,8}(?!\d)|(?<![\dx*•])\d{4,8}(?!\d)\D{0,12}(?:otp|pin|code|ओटीपी|कोड)`);
@@ -830,6 +917,8 @@
     String.raw`(?:पैसे|पैसा|रकम|रुपये)\s+(?:पाने|लेने)\s+के\s+लिए\s+(?:\S+\s+){0,3}?(?:पिन|क्यूआर|qr|स्कैन)`,
     String.raw`(?:paise|paisa)\s+(?:paane|pane|lene)\s+ke\s+liye\s+(?:\S+\s+){0,3}?(?:pin|qr|scan)`,
     String.raw`(?:राशि|पैसे|पैसा|रकम|रुपये)\s+(?:प्राप्त|पाने|लेने)\s+(?:करने\s+)?के\s+लिए\s+(?:\S+\s+){0,6}?(?:पिन|क्यूआर|qr|स्कैन)`,
+    // the QR named first, as a person tells it: "he sent a QR code of Re 1 and asked me to scan it and receive money"
+    String.raw`(?:qr|क्यूआर)\W+(?:\w+\W+){0,12}?(?:scan|स्कैन)\W+(?:\w+\W+){0,3}?(?:and|to|kar\w*|करके|कर\s+के)\W+(?:\w+\W+){0,2}?(?:receive|get|claim|paane|lene|पाने|लेने)`,
   ].map(function (p) { return new Rx(p); });
   // The collect-request trick: "to reverse it, approve the request we sent you", "I sent Rs 5000 by mistake,
   // accept the request and return it". Approving a UPI request sends money out; it never reverses or refunds
@@ -865,6 +954,24 @@
   const SHARE_TO_CONTACTS = new Rx(
     String.raw`(?:send|sent|share|shared|forward|upload)\w*\s+(?:\w+\s+){0,3}?(?:to\s+)?(?:all\s+)?(?:your\s+)?` +
     String.raw`(?:contacts|relatives|family|friends)`);
+  // The same threat in Hindi word order: the people first, a future "I will send / show / post" last ("tumhare
+  // saare contacts ko bhej denge", "friends aur family group me daal dungi", "दोस्तों को भेज दूंगी"). It counts only
+  // after a "pay, or else" earlier in the same clause (OR_ELSE); mirrors sahayak/fraud/signals.py.
+  const SHARE_TO_CONTACTS_HI = new Rx(
+    String.raw`(?<![a-z])(?:contacts?|friends|family|relatives|dost(?:o|on)|rishtedaa?r(?:o|on)?|ghar\s*wal(?:e|o|on)|` +
+    String.raw`parivar(?:\s+wal(?:e|o|on))?|biwi|wife|husband|sab\s*ko|sabhi\s*ko)(?![a-z])(?:\s+\S+){0,5}?\s+` +
+    String.raw`(?:(?:bhej|daal|dal|dikha|forward|share|post|upload|viral|leak)\s*(?:kar\s*)?(?:d(?:u|oo)ng[ai]|d[eu]nge|dege|dega|degi)` +
+    String.raw`|(?:bhej|daal|dal|dikha)(?:u|oo|au)ng[ai]|(?:bhej|daal|dal|dikhay)enge` +
+    String.raw`|(?:forward|share|post|upload|viral|leak)\s+kar(?:u|oo)ng[ai]|(?:forward|share|post|upload|viral|leak)\s+karenge)(?![a-z])` +
+    String.raw`|(?<![ऀ-ॿ])(?:कॉन्टैक्ट्स|कॉन्टैक्ट|कांटेक्ट्स|कॉन्टेक्ट्स|दोस्तों|दोस्तो|परिवार\s+वालों|परिवार\s+वालो|परिवार|` +
+    String.raw`रिश्तेदारों|रिश्तेदारो|घर\s*वालों|घर\s*वालो|पत्नी|बीवी|पति|सबको|सब\s+को|सभी\s+को)(?:\s+\S+){0,5}?\s+` +
+    String.raw`(?:(?:भेज|डाल|दिखा|फॉरवर्ड|शेयर|पोस्ट|अपलोड|वायरल|लीक)\s*(?:कर\s*)?(?:दूंगा|दूंगी|दुंगा|दुंगी|देंगे|देंगी|देगा|देगी)` +
+    String.raw`|(?:भेज|डाल)(?:ूंगा|ूंगी|ुंगा|ुंगी|ेंगे)|दिखाऊंगा|दिखाऊंगी|दिखाएंगे` +
+    String.raw`|(?:फॉरवर्ड|शेयर|पोस्ट|अपलोड|वायरल|लीक)\s+(?:करूंगा|करूंगी|करेंगे))`);
+  // "Pay, or else": warna, varna, nahi to, "nahi kiya to", otherwise, or else, वरना, नहीं तो, "नहीं भेजे तो".
+  const OR_ELSE = new Rx(
+    String.raw`(?<![a-z])(?:warna|varna|vrna|otherwise|or\s+else|(?:nahi|nahin|nai)\s+(?:\w+\s+)?toh?)(?![a-z])` +
+    String.raw`|वरना|अन्यथा|(?:नहीं|नही)\s+(?:\S+\s+)?तो(?![ऀ-ॿ])`);
   const PRIZE_EXCLUDE = new Rx(String.raw`reward\s+points|loyalty\s+points|earned\s+\d+\s+points|cashback\s+points`);
   const NO_FEE = new Rx(String.raw`(?:\bno|without|zero|free|बिना|कोई)\s+$`);  // "No registration fee", "बिना शुल्क"
   const EARN_RATE = new Rx(String.raw`earn\w*\s+(?:upto\s+|up to\s+)?(?:rs\.?|₹|inr)?\s?\d[\d,]*\s*(?:/-)?\s*(?:per day|daily|/day|a day|per hour|per task|weekly|per week)`);
@@ -872,12 +979,67 @@
   const PAY_TO_GET = new Rx(String.raw`pay\s+(?:only\s+)?(?:rs\.?|₹|inr)?\s?\d[\d,]*(?:/-)?\s+(?:only\s+)?(?:to|for|and)\s+(?:receive|get|claim|release|unlock|activate|process|withdraw)`);
   const HI_FEE_FIRST = new Rx(String.raw`(?:पहले|pehle)\s+(?:\S+\s+){0,4}?(?:फीस|शुल्क|चार्ज|fee|fees|charge)`);
   const APK_TEXT = new Rx(String.raw`\.apk\b|\bapk\s+(?:file|download|link)`);
+  // The number a BLOCK keyword is texted to is the bank's SMS line, not a person to call (signals.py _SMS_BLOCK).
+  const SMS_BLOCK_MOB = String.raw`(?<!\d)(?:\+?91[\s-]?|0)?[6-9]\d{4}[\s-]?\d{5}(?!\d)`;
+  const SMS_BLOCK = new Rx(
+    String.raw`(?<![a-z])(?:sms|text)\W+(?:block|blk)(?!ed|ing)[^,;:.!?।]{0,30}?(?<![a-z])(?:to|on)\s+` + SMS_BLOCK_MOB +
+    String.raw`|(?<![a-z])(?:block|blk|ब्लॉक)\S*\s+(?:\S+\s+){0,3}?` + SMS_BLOCK_MOB + String.raw`\s+(?:par|pe|पर)\s+(?:sms|एसएमएस)` +
+    "|" + SMS_BLOCK_MOB + String.raw`\s+(?:par|pe|पर)\s+(?:block|blk|ब्लॉक)\S*\s+(?:\S+\s+){0,2}?(?:sms|एसएमएस)`);
+  const TOLL_FREE = new Rx(String.raw`(?<!\d)1(?:800|860|600)[\s-]?\d{2,4}(?:[\s-]?\d{2,4})?(?!\d)`);
   const JOIN_GROUP = new Rx(
     String.raw`\bjoin\W+(?:\w+\W+){0,5}?(?:group|channel)\b` +
     String.raw`|\b(?:group|channel)\W+(?:\w+\W+){0,2}?(?:on\s+)?(?:telegram|whatsapp)\b` +
     String.raw`|\b(?:telegram|whatsapp)\W+(?:\w+\W+){0,2}?(?:group|channel)\b`);
+  // "my SBI account", "मेरे SBI वाले खाते में": a writer naming their own bank is not claiming to be the bank.
+  // Checked just before each bank or office name (one word may sit between). Not for a described call, where
+  // "my" is the person who got the call.
+  const OWN_ORG = new Rx(String.raw`(?:(?<![a-z])(?:my|mere|mera|meri|his|her|uske|uski|uska)` +
+    String.raw`|(?<![ऀ-ॿ])(?:मेरे|मेरा|मेरी|उसके|उसकी|उसका))\s+(?:\S+\s+)?$`);
+  // an account or phone number written out (9 to 18 digits): a new place to send money
+  const LONG_NUMBER = new Rx(String.raw`(?<!\d)\d{9,18}(?!\d)`);
+  // wrong_transfer: a Devanagari letter right after a match means a longer word ("वापस कर दें" inside
+  // "वापस कर देंगे"); the danda (। ॥) ends a sentence and does not count. "I will return it" is a promise.
+  const DEV_LETTER = new Rx("[\u0900-\u0963\u0966-\u097f]");
+  const PROMISE = new Rx(String.raw`(?<![a-z])(?:i|we|he|she|they)(?:'ll|'d|\s+(?:will|shall|would|can|could))\s+(?:\w+\s+){0,2}$`);
+  // An amount the reader is told to pay, for job_fee: "pay ₹6,500", "deposit Rs 999", "₹1,200 jama karna hai",
+  // "₹500 dena hoga", "₹2,000 भरने होंगे". Salary wording ("we pay ₹15,000 per month", "monthly pay ₹15,000 +
+  // incentives") is not a demand.
+  const AMT = String.raw`(?:₹|rs\.?|inr|rupees?|रु\.?|रुपये|रुपए)\s?\d[\d,]*(?:\.\d{1,2})?(?:\s?/-)?`;
+  const PAY_REQ = String.raw`(?:(?:need|needs|have|has|had)\s+to|must|should|please|kindly|pls|plz|(?:asked|asking|told|telling|wants?|wanted)\s+(?:me\s+|us\s+|you\s+|him\s+|her\s+)?to)`;
+  const PAY_FOR = String.raw`(?:for|towards|as|today|now|immediately|within|before|tonight|first|via|through|online|in\s+advance|advance` +
+    String.raw`|to\s+(?:confirm|get|book|reserve|block|secure|activate|receive|process|start|complete|join|register|release|claim))`;
+  const PAY_AMOUNT = new Rx(
+    // English puts the amount after the verb. Asked for ("need to pay ₹6,500", "kindly pay Rs.3,500", "asked me to
+    // deposit ₹8,000") or paid for something ("pay ₹2,000 for the uniform"); not salary wording ("pay ₹16,000, duty 8
+    // hours", "we will pay ₹1,000 as joining bonus", "monthly pay ₹28,000 + incentives")
+    String.raw`(?<!no )` + PAY_REQ + String.raw`\s+(?:pay|deposit|transfer|send)\s+(?:(?:only|just|a|the|of)\s+)?` + AMT +
+    String.raw`(?!\s*(?:per\b|/|a\s+month|monthly|pm\b|salary|ctc|stipend))` +
+    String.raw`|(?<![a-z])(?<!we )(?<!will )(?<!we'll )(?:pay|deposit|transfer)\s+(?:(?:only|just|a|the|of)\s+)?` + AMT +
+    String.raw`\s*` + PAY_FOR + String.raw`(?![a-z])` +
+    String.raw`|(?<![a-z])(?<!we )(?<!will )deposit\s+(?:(?:only|just|a|the|of)\s+)?` + AMT +
+    String.raw`(?!\s*(?:per\b|/|a\s+month|monthly|pm\b|salary|ctc|stipend|\+|-|to\s+(?:₹|rs)))` +
+    // "₹4,500 must be paid", "a fee of ₹35,000 has to be paid"
+    String.raw`|` + AMT + String.raw`\s+(?:[^\s.।!?]+\s+){0,3}?(?:must|needs?|has|have)\s+(?:to\s+)?be\s+(?:paid|deposited|transferred)` +
+    // Hinglish and Hindi put the verb last: "₹1,200 jama karna hai", "₹12,000 dene honge", "₹4,500 जमा करना होगा";
+    // "₹18,000 account mein transfer hogi" is the salary being paid, not a demand
+    String.raw`|` + AMT + String.raw`\s+(?:[^\s.।!?]+\s+){0,3}?(?:(?:jama|pay|deposit|transfer)\s+(?:karna|karni|karo|karein|karen|kar\s+do` +
+    String.raw`|kar\s+dena|kar\s+dein|kar\s+dijiye|kijiye|karne\s+(?:honge|hain|padenge|hoga|padega))` +
+    String.raw`|(?:bharna|bharni|bharne|dena|deni|dene)\s+(?:hai|hain|hoga|hogi|honge|padega|padegi|padenge|pdega)` +
+    String.raw`|bharo|bharein|bharen|bhar\s+do|de\s+do|de\s+dijiye)(?![a-z])` +
+    String.raw`|` + AMT + String.raw`\s+(?:[^\s.।!?]+\s+){0,3}?(?:(?:जमा|भुगतान)\s+(?:करना|करनी|करें|करो|कर\s+दें|कीजिए|करने\s+(?:होंगे|हैं|पडेंगे))` +
+    String.raw`|(?:भरना|भरनी|भरने|देना|देनी|देने)\s+(?:है|हैं|होगा|होगी|होंगे|पडेगा|पडेगी|पडेंगे)|भरें|भरो)`);
+  // Signals that may stand next to in_person: a contact mobile and a time word are normal in a genuine appointment.
+  const IN_PERSON_OK = new Set(["contact_mobile", "urgency"]);
   const REQUESTS = ["otp_request", "personal_info_request", "upi_receive", "remote_access", "link_apk",
-    "advance_fee", "contact_mobile", "kyc_threat", "digital_arrest"];
+    "advance_fee", "job_fee", "contact_mobile", "kyc_threat", "digital_arrest"];
+  // A bank named as the card that gets a shop's discount is a sale, not a message from the bank (signals.py).
+  const BANK_OFFER = new Rx(
+    String.raw`(?:discount|cashback|off|emi|savings?)\s+(?:on|with|using|via)\s+(?:\S+\s+){0,3}?(?:credit\s+|debit\s+)?cards?\b` +
+    String.raw`|(?:\S+\s+){0,2}?(?:cards?|कार्ड\S*)\s+(?:par|pe|पर|से)\s+(?:\S+\s+){0,3}?` +
+    String.raw`(?:discount|cashback|off|छूट|डिस्काउंट|कैशबैक)`);
+  const YOUR = new Rx(String.raw`(?<![a-z])(?:your|aapke|aapka|aapki)(?![a-z])|आपके|आपका|आपकी`);
+  const SOFT = new Set(["urgency", "kyc_mention", "easy_money_weak"]);
+  const SOFT_FOR_VISIT = new Set(["urgency", "kyc_mention", "easy_money_weak", "contact_mobile", "prize"]);
 
   function snippet(t, m, width) {
     width = width || 40;
@@ -893,6 +1055,8 @@
     this.suspiciousTlds = new Set(d.suspicious_tlds);
     this.officialSuffixes = d.official_suffixes.slice();
     this.officialDomains = d.official_domains.slice();
+    // numbers a bank itself publishes (missed-call banking): calling them is not the scam signal
+    this.officialNumbers = new Set(d.official_numbers || []);
     this.brandTokens = d.brand_tokens.slice().sort(function (a, b) { return cpLen(b) - cpLen(a); });
   }
 
@@ -919,13 +1083,18 @@
     const cut = CLAUSE_BREAK.search(t, end, end + 14);
     return !!this.L.negations_post.search(t, end, cut ? cut.start : Math.min(t.len, end + 14));
   };
-  /** A negation anywhere earlier in the same sentence ('Do not install apps like AnyDesk'). */
+  /** negated(), or the words sit in a sentence written mostly in a script Sahayak cannot read. */
+  SignalEngine.prototype.unclear = function (t, start, end) {
+    return this.negated(t, start, end) || unreadable(sentence(t, start, end));
+  };
+  /** A negation anywhere earlier in the same sentence ('Do not install apps like AnyDesk'), or a sentence
+   *  Sahayak cannot read. */
   SignalEngine.prototype.negatedInSentence = function (t, m) {
-    return !!this.L.negations_pre.search(t, sentenceStart(t, m.start), m.start);
+    return !!this.L.negations_pre.search(t, sentenceStart(t, m.start), m.start) || unreadable(sentence(t, m.start, m.end));
   };
   /** True when the match sits in a warning sentence ('police never do digital arrest'). */
   SignalEngine.prototype.advisoryContext = function (t, m) {
-    return !!this.L.advisory.search(sentence(t, m.start, m.end)) || this.negated(t, m.start, m.end);
+    return !!this.L.advisory.search(sentence(t, m.start, m.end)) || this.unclear(t, m.start, m.end);
   };
 
   // ------------------------------------------------------------ detection
@@ -941,23 +1110,45 @@
       fired.set(sid, { id: sid, weight: Number(spec.weight), hard: !!spec.hard, evidence: ev });
     }
     const negated = function (m) { return self.negated(t, m.start, m.end); };
+    const unclear = function (m) { return self.unclear(t, m.start, m.end); };
     const advisory = function (m) { return self.advisoryContext(t, m); };
 
-    const orgBank = !!L.bank_terms.search(t);
-    const orgClaim = orgBank || !!L.authority_terms.search(t);
+    // a shop's discount on bank cards ("10% off on select bank cards") is a sale, not the bank speaking
+    const offers = BANK_OFFER.finditer(t).filter(function (o) { return !YOUR.search(o.group(0)); });
+    const claimed = function (lex, skip) {
+      return lex.finditer(t).some(function (m) {
+        return (ctx.inputType === "call" || !OWN_ORG.search(t, Math.max(0, m.start - 30), m.start))
+          && !(skip || []).some(function (o) { return o.start <= m.start && m.end <= o.end; });
+      });
+    };
+    const orgBank = claimed(L.bank_terms, offers);
+    const orgClaim = orgBank || claimed(L.authority_terms);
     const links = ctx.urls.filter(function (u) { return u.host !== "wa.me" && u.host !== "api.whatsapp.com"; });
     const nonofficial = links.filter(function (u) { return !self.isOfficial(u.host); });
     const official = links.filter(function (u) { return self.isOfficial(u.host); });
-    const shareVerbs = L.share_verbs.finditer(t).filter(function (v) { return !negated(v); });
+    const shareVerbs = L.share_verbs.finditer(t).filter(function (v) { return !unclear(v); });
 
     // --- requests for secrets
     let secrets = L.otp_terms.finditer(t).concat(L.code_phrases.finditer(t));
     secrets = secrets.concat(L.pin_terms.finditer(t).filter(function (m) { return !PIN_CODE.match(t, m.end); }));
+    // On a call the caller asking for the code is the scam; the code told at the door is how delivery works:
+    // asked for after the handover with no call in between, or to be told to the delivery person when the goods
+    // arrive (handover_done / handover_when + handover_to / not_in_person). Mirrors signals.py.
+    const atDoor = ctx.inputType === "call" && !nonofficial.length && !!OTP_OK_CONTEXT.search(t)
+      && !(L.not_in_person && L.not_in_person.search(t));
+    const done = atDoor && L.handover_done ? L.handover_done.finditer(t) : [];
+    const to = atDoor && L.handover_to && L.handover_when && L.handover_when.search(t) ? L.handover_to.finditer(t) : [];
+    let doorstep = false;
     for (const v of shareVerbs) {
       if (!secrets.some(function (s) { return gap(v, s) <= 60; })) continue;
       const sent = sentence(t, v.start, v.end);
       const routine = OTP_OK_CONTEXT.search(sent) || CODE_NEXT_TO_TERM.search(t);
       if (routine && !nonofficial.length && ctx.inputType !== "call") continue;  // "share OTP 4417 with the driver" delivers a code; it does not ask for one
+      if (done.some(function (d) { return d.end <= v.start && !CALL_WORD.search(t, d.end, v.start); })
+          || to.some(function (r) { return gap(v, r) <= 40; })) {
+        doorstep = true;
+        continue;
+      }
       fire("otp_request", { phrase: snippet(t, v) });
       break;
     }
@@ -969,7 +1160,7 @@
       const m = pat.search(t);
       // also reject a negation inside the match: "to receive money you never need to enter your PIN",
       // and a warning about the trick: "fraudsters ask you to scan QR codes for refunds"
-      if (m && !negated(m) && !L.negations_pre.search(t, m.start, m.end)
+      if (m && !unclear(m) && !L.negations_pre.search(t, m.start, m.end)
           && !L.advisory.search(sentence(t, m.start, m.end))) {
         fire("upi_receive", { phrase: cpSlice(m.group(0), 0, 60) });
         break;
@@ -1014,23 +1205,40 @@
     const numberSpans = MOBILE_RE.finditer(t);
     const calls = L.call_verbs.finditer(t);
     const waLink = ctx.urls.some(function (u) { return u.host === "wa.me" || u.host === "api.whatsapp.com"; });
+    const mobiles = ctx.mobiles.filter(function (x) { return !self.officialNumbers.has(x); });
+    // a bank's own footer never arrives from a personal mobile number
+    const smsLines = ctx.senderKind !== "mobile" && TOLL_FREE.search(t) ? SMS_BLOCK.finditer(t) : [];
     let contact = null;
     for (const m of numberSpans) {
+      if (self.officialNumbers.has(digitsOnly(m.group(1)))) continue;
+      if (smsLines.some(function (s) { return s.start <= m.start && m.end <= s.end; })) continue;  // the bank's SMS-block line
       if (calls.some(function (c) { return gap(m, c) <= 40; }) || n.indexOf("whatsapp") >= 0) {
         contact = digitsOnly(m.group(1));
         break;
       }
     }
-    if (contact === null && waLink && ctx.mobiles.length) contact = ctx.mobiles[0];
+    if (contact === null && waLink && mobiles.length) contact = mobiles[0];
     if (contact) {
       fire("contact_mobile", { number: contact });
       if (orgClaim) fire("org_contact_mobile", { number: contact });
       if (L.debit_credit_terms.search(t)) fire("fake_alert_callback", { number: contact });
     }
-    if (L.customer_care_terms.search(t) && ctx.mobiles.length) fire("customer_care_bait", { number: ctx.mobiles[0] });
+    // The 'customer care' words must label the number ("Call customer care 98760 12345"), not a job title
+    // or a shop's name elsewhere in the message ("Customer Support Associate role ... call HR on 93104 57286").
+    const care = L.customer_care_terms.finditer(t);
+    for (const x of numberSpans) {
+      const number = digitsOnly(x.group(1));
+      if (mobiles.indexOf(number) >= 0 && care.some(function (c) { return gap(x, c) <= 80; })) {
+        fire("customer_care_bait", { number: number });
+        break;
+      }
+    }
 
     // --- pressure and threats
-    let m = L.urgency.search(t);
+    // "no hurry", "koi jaldi nahi", "jab time mile": a message that says there is no rush is not rushing
+    // you, even when it names a date ("fees ki last date 10 tarikh hai ... koi jaldi nahi"). Packs 1.6.0+.
+    const calm = L.no_pressure ? L.no_pressure.search(t) : null;
+    let m = calm ? null : L.urgency.search(t);
     if (m) fire("urgency", { phrase: m.group(0) });
     for (const x of L.digital_arrest.finditer(t)) if (!advisory(x)) { fire("digital_arrest"); break; }
     for (const x of L.threat_terms.finditer(t)) if (!advisory(x)) { fire("threat_authority", { phrase: x.group(0) }); break; }
@@ -1052,12 +1260,25 @@
     }
     const payFirst = PAY_FIRST.search(t);
     const feeTerms = L.advance_fee.finditer(t).filter(function (x) {
-      return !negated(x) && !NO_FEE.search(t.slice(Math.max(0, x.start - 10), x.start));
+      return !unclear(x) && !NO_FEE.search(t.slice(Math.max(0, x.start - 10), x.start));
     });
     if (feeTerms.length || PAY_TO_GET.search(t) || HI_FEE_FIRST.search(t) || HI_FEE_SEND.search(t)
         || (payFirst && !negated(payFirst))
         || (COURIER_FEE.search(t) && (L.courier_terms.search(t) || n.indexOf("gift") >= 0))) {
       fire("advance_fee");
+    }
+    // A job that asks you to pay: real employers never charge to hire, train, kit out or verify you. A fee paid
+    // on the recruiter's own official site, with no number or UPI ID to pay ("pay ₹500 exam fee only on
+    // rrbapply.gov.in"), is not this. On once the fraud pack defines job_fee and job_terms; mirrors signals.py.
+    const onOfficialSite = official.length && !nonofficial.length && !ctx.mobiles.length && !ctx.upiIds.length;
+    if (self.defs.job_fee && L.job_terms && L.job_terms.search(t) && !onOfficialSite) {
+      for (const x of PAY_AMOUNT.finditer(t)) {
+        // also a negation inside the match: "₹500 maange to mat bharo"
+        if (!advisory(x) && !L.negations_pre.search(t, x.start, x.end)) {
+          fire("job_fee", { phrase: cpSlice(x.group(0), 0, 60) });
+          break;
+        }
+      }
     }
     if (L.loan.search(t)) fire("loan_offer");
 
@@ -1068,7 +1289,10 @@
       else if (!L.branch_visit.search(t)) fire("kyc_mention");
     }
     const elec = L.electricity_terms.finditer(t), cut = L.disconnect_terms.finditer(t);
-    if (elec.length && cut.length && near(elec, cut, 60) && (L.tonight_terms.search(t) || ctx.mobiles.length)) fire("electricity_cut");
+    // a cut explained as maintenance work is a notice, not the unpaid-bill threat
+    const maintenance = L.maintenance_terms && L.maintenance_terms.search(t);
+    if (elec.length && cut.length && near(elec, cut, 60) && (L.tonight_terms.search(t) || ctx.mobiles.length)
+        && !maintenance) fire("electricity_cut");
     if (L.family_terms.search(t) && L.emergency_terms.search(t) && L.money_send_terms.search(t)) fire("relative_emergency");
     if (L.new_number.search(t)) fire("new_number");
     if (L.sim_terms.search(t) && L.sim_action.search(t)) fire("sim_swap");
@@ -1078,8 +1302,22 @@
       const actions = L.action_terms.finditer(t).concat(calls).filter(function (a) { return !advisory(a); });
       if (actions.length && near(refunds, actions, 60)) fire("refund_bait");
     }
+    // "Sent to you by mistake, please send it back": the 'credited' SMS is fake, or real money that only the
+    // sender's bank should reverse. Packs from 1.6.0 define wrong_transfer; mirrors sahayak/fraud/signals.py.
+    if (self.defs.wrong_transfer && L.mistake_terms.search(t)
+        && (L.money_terms.search(t) || ctx.amounts.length || ctx.upiIds.length)) {
+      for (const b of L.return_request.finditer(t)) {
+        // "वापस कर दें" asks, "वापस कर देंगे" promises; "please return it" asks, "I will return it" promises
+        if (DEV_LETTER.match(t, b.end) || PROMISE.search(t, Math.max(0, b.start - 40), b.start) || advisory(b)) continue;
+        fire("wrong_transfer");
+        break;
+      }
+    }
     const media = L.sextortion_media.finditer(t);
-    const threat = L.sextortion_threat.finditer(t).concat(SHARE_TO_CONTACTS.finditer(t));
+    const threat = L.sextortion_threat.finditer(t).concat(SHARE_TO_CONTACTS.finditer(t))
+      .concat(SHARE_TO_CONTACTS_HI.finditer(t).filter(function (x) {
+        return !!OR_ELSE.search(t, Math.max(x.start - 60, clauseStart(t, x.start)), x.start);
+      }));
     const money = !!(L.money_terms.search(t) || ctx.amounts.length || ctx.upiIds.length);
     if ((media.length && threat.length && near(media, threat, 80) && money)
         || (L.sextortion_explicit.search(t) && (threat.length || money))) {
@@ -1094,6 +1332,13 @@
         && (ctx.amounts.length || L.money_terms.search(t))
         && SEND_MONEY.finditer(t).some(function (x) { return !advisory(x); })) {
       fire("scheme_fee");
+    }
+    // A donation appeal paid to a personal UPI ID or phone number: the fake medical or relief appeal. On once the
+    // fraud pack defines donation_appeal and donation_terms; mirrors sahayak/fraud/signals.py.
+    if (self.defs.donation_appeal && (ctx.upiIds.length || mobiles.length)
+        && (ctx.amounts.length || ctx.upiIds.length || L.money_terms.search(t) || WALLET_TERMS.search(t))
+        && L.donation_terms.finditer(t).some(function (x) { return !advisory(x); })) {
+      fire("donation_appeal");
     }
     if (L.challan_terms.search(t) && nonofficial.length) fire("challan_link");
     if (L.tax_refund_terms.search(t) && (nonofficial.length || fired.has("personal_info_request"))) fire("tax_refund_bait");
@@ -1113,11 +1358,45 @@
     if (L.otp_terms.search(t) && hasCode(t) && (adv || negatedShare) && !asked && !nonofficial.length) {
       fire("genuine_otp_delivery");
     }
+    // a bank's transaction alert, not a person's story of a call (signals.py)
     if (L.debit_credit_terms.search(t) && L.account_terms.search(t) && ctx.amounts.length
-        && !nonofficial.length && !asked) {
+        && !nonofficial.length && !asked && ctx.inputType !== "call") {
       fire("genuine_txn_alert");
     }
+    if (doorstep && !asked && self.defs.doorstep_code) fire("doorstep_code");
     if (adv && !asked) fire("advisory");
+    // It says there is no hurry, gives no new place to send money (no UPI ID, number, link or account
+    // number) and nothing else in it looks like a scam: "mere purane account me bhej dena, koi jaldi nahi".
+    // This can outweigh the wording model alone, never a scam sign. Packs from 1.6.0.
+    if (calm && self.defs.no_pressure && !Array.from(fired.values()).some(function (f) { return f.weight > 0; })
+        && !(ctx.upiIds.length || ctx.mobiles.length || ctx.urls.length || LONG_NUMBER.search(t))) {
+      fire("no_pressure", { phrase: calm.group(0) });
+    }
+    // In person: come to a camp, office, shop or interview, or bring your papers, with no money, unknown link or
+    // UPI ID asked (signals.py in_person); and a call the person says asked for nothing (nothing_asked).
+    const positives = Array.from(fired.values()).filter(function (f) { return f.weight > 0; }).map(function (f) { return f.id; });
+    if (self.defs.in_person && !nonofficial.length && !ctx.upiIds.length) {
+      const visits = L.in_person ? L.in_person.finditer(t).filter(function (x) { return !unclear(x); }) : [];
+      const amounts = AMOUNT_RE.finditer(t);
+      const pay = PAY_CUE.finditer(t).concat(WALLET_TERMS.finditer(t)).filter(function (x) {
+        return !negated(x) && !NO_FEE.search(t.slice(Math.max(0, x.start - 10), x.start));
+      });
+      const money = (amounts.length > 0 && pay.length > 0) || visits.some(function (v) {
+        return amounts.some(function (a) { const d = v.start - a.end; return d >= 0 && d <= 25; });
+      });
+      const visit = visits.length && !money && !positives.some(function (s) { return !SOFT_FOR_VISIT.has(s); }) ? visits[0] : null;
+      let bring = null;
+      if (L.bring_verbs && L.bring_items && !positives.some(function (s) { return !IN_PERSON_OK.has(s); })) {
+        const brings = L.bring_verbs.finditer(t), items = L.bring_items.finditer(t);
+        if (brings.length && items.length && near(brings, items, 40)) bring = brings[0];
+      }
+      if (visit || bring) fire("in_person", { phrase: (visit || bring).group(0) });
+    }
+    if (self.defs.nothing_asked && L.nothing_asked && ctx.inputType === "call" && L.nothing_asked.search(t)
+        && !positives.some(function (s) { return !SOFT.has(s); }) && !nonofficial.length && !ctx.upiIds.length
+        && !L.action_terms.search(t) && secrets.every(function (x) { return negated(x); })) {
+      fire("nothing_asked");
+    }
 
     return Array.from(fired.values());
   };
@@ -1329,15 +1608,20 @@
 
   function copy(x) { return JSON.parse(JSON.stringify(x)); }
 
-  function buildCard(fired, pack) {
+  function buildCard(fired, pack, unread) {
     const sc = score(fired, pack), risk = sc[0], hard = sc[1];
-    const level = levelFor(risk, hard, pack);
-    const category = level !== "no_signs" ? pickCategory(fired, pack) : null;
+    let level = levelFor(risk, hard, pack);
+    if (level === "no_signs" && unread && pack.verdicts.unreadable) level = "unreadable";
+    const category = level !== "no_signs" && level !== "unreadable" ? pickCategory(fired, pack) : null;
     const defs = pack.signals, cats = pack.categories;
     const show = function (f) { return defs[f.id].show === undefined ? true : defs[f.id].show; };
+    const language = level === "unreadable" ? pack.unreadable.scripts[unread] || null : null;
     let reasons, actions;
 
-    if (level === "no_signs") {
+    if (level === "unreadable") {
+      reasons = [{ id: "unread_script", text: fill(pack.unreadable.reason, {}), weight: 0.0 }];
+      actions = pack.unreadable.actions;
+    } else if (level === "no_signs") {
       const shown = fired.filter(function (f) { return f.weight < 0 && show(f); });
       shown.sort(function (a, b) { return a.weight - b.weight; });
       reasons = shown.slice(0, 2).map(function (f) { return { id: f.id, text: fill(defs[f.id].reason, f.evidence), weight: f.weight }; });
@@ -1359,7 +1643,10 @@
     const verdictText = pack.verdicts[level];
     const catName = category ? cats[category].name : null;
     const headline = {};
-    for (const lang of LANGS) headline[lang] = verdictText.headline[lang].split("{category}").join(catName ? catName[lang] : "");
+    for (const lang of LANGS) {
+      headline[lang] = verdictText.headline[lang].split("{category}").join(catName ? catName[lang] : "")
+        .split("{language}").join(language ? language[lang] : "");
+    }
     const acts = {};
     for (const lang of LANGS) acts[lang] = actions[lang].slice();
     return {
@@ -1739,19 +2026,19 @@
         if (p >= clf.threshold) fired.push({ id: "classifier_flag", weight: Number(defs.classifier_flag.weight), hard: false, evidence: {} });
       }
 
-      const card = buildCard(fired, pack);
+      const card = buildCard(fired, pack, ctx.unread);
       card.id = randomId();
       card.input_type = inputType;
       card.lang_detected = ctx.lang;
       card.explainer = "template";
       card.model_scores = scores;
-      card.helplines = card.verdict !== "no_signs" ? copy(pack.helplines) : [];
+      card.helplines = card.verdict === "scam" || card.verdict === "suspicious" ? copy(pack.helplines) : [];
       card.extracted = {
         links: ctx.urls.map(function (u) { return prot.unwrap(u.raw); }),
         mobiles: ctx.mobiles.slice(),
         upi_ids: ctx.upiIds.slice(),
         amounts: ctx.amounts.slice(),
-        rupees_at_risk: ctx.amounts.length && card.verdict === "scam" ? Math.max.apply(null, ctx.amounts) : 0.0,
+        rupees_at_risk: card.verdict === "scam" ? rupeesAtRisk(ctx.t) : 0.0,
       };
       card.pack = { name: pack.pack, version: pack.version, sha256: sha };
       card.timing_ms = { signals: pyRound(tSignals - t0, 2), total: pyRound(now() - t0, 2) };
