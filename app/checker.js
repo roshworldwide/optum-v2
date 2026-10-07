@@ -542,10 +542,18 @@
   const HXXP = new Rx(String.raw`\bhxxp(s?)://`);
   const BRACKET_DOT = new Rx(String.raw`\s*[\[({]\s*(?:\.|dot)\s*[\])}]\s*`);
   const WORD_DOT = new Rx(String.raw`(?<=[a-z0-9])\s+dot\s+(?=(?:` + TLDS + String.raw`)\b)`);
+  // A link split with spaces around its dot so filters miss it ("dlvry-in . help/pay", "remove the spaces"). Joined
+  // only when it cannot be a sentence ending: the name has a hyphen or a digit, or the ending carries a path.
+  const SPACED_DOT = new Rx(String.raw`(?<![a-z0-9-])([a-z0-9][a-z0-9-]*)\s+\.\s+((?:` + TLDS + String.raw`)\b)(/?)`);
+  function joinSpaced(whole, name, tld, slash) {
+    if (/[a-z]/.test(name) && (slash || name.indexOf("-") >= 0 || /[0-9]/.test(name))) return name + "." + tld + slash;
+    return whole;
+  }
   function defang(text) {
     text = HXXP.sub(text, "http$1://");
     text = BRACKET_DOT.sub(text, ".");
-    return WORD_DOT.sub(text, ".");
+    text = WORD_DOT.sub(text, ".");
+    return SPACED_DOT.sub(text, joinSpaced);
   }
 
   // Digits written for letters inside words: "0TP", "bl0cked", "upd4te". Only in words that are mostly
@@ -618,9 +626,13 @@
   const TOLLFREE_RE = new Rx(String.raw`(?<!\d)(18[06]0[\s-]?\d{3}[\s-]?\d{3,4})(?!\d)`);
   const SERIES1600_RE = new Rx(String.raw`(?<!\d)(1600\d{6})(?!\d)`);
   const DLT_SENDER_RE = new Rx(String.raw`^[a-z]{2}-[a-z0-9]{3,9}(?:-[pstg])?$`, true);
+  // An amount: the currency first ("₹500", "रुपये 500"), or the number first ("500 रुपये", "10 हजार रुपये", "499/-").
+  // Groups 1-3 and 4-6: the number, its paise, its unit (normalize.py _AMOUNT_RE).
   const AMOUNT_RE = new Rx(
     String.raw`(?:₹|\brs\.?|\binr|\brupees?|रु\.?|रुपये|रुपए)\s?(\d{1,3}(?:,\d{2,3})+|\d+)(?:\.(\d{1,2}))?` +
-    String.raw`(?:\s*(lakh|lac|crore|cr|लाख|करोड़|करोड))?`,
+    String.raw`(?:\s*(lakh|lac|crore|cr|thousand|लाख|करोड़|करोड|हजार))?` +
+    String.raw`|(?<![\d.,])(\d{1,3}(?:,\d{2,3})+|\d+)(?:\.(\d{1,2}))?\s?(?:(lakh|lac|crore|cr|thousand|लाख|करोड़|करोड|हजार)\s?)?` +
+    String.raw`(?:rupees?\b|rs\b\.?|inr\b|रुपये|रुपए|रूपए|रूपये|रुपया|रूपया|रुपयों|/-)`,
     true);
   const UPI_RE = new Rx(String.raw`(?<![\w.@-])([a-z0-9][a-z0-9._-]{1,255}@[a-z][a-z0-9]{1,63})(?![\w@]|\.[a-z])`, true);
   const NON_DIGITS = /\P{Nd}/gu;
@@ -638,10 +650,12 @@
   function extract1600(t) { return SERIES1600_RE.finditer(t).map(function (m) { return m.group(1); }); }
 
   function amountValue(m) {
-    let value = Number(asciiDigits(m.group(1).split(",").join("") + (m.group(2) ? "." + m.group(2) : "")));
-    const unit = (m.group(3) || "").toLowerCase();
+    const g = m.group(1) !== null ? 1 : 4;
+    let value = Number(asciiDigits(m.group(g).split(",").join("") + (m.group(g + 1) ? "." + m.group(g + 1) : "")));
+    const unit = (m.group(g + 2) || "").toLowerCase();
     if (unit === "lakh" || unit === "lac" || unit === "लाख") value *= 1e5;
     else if (unit === "crore" || unit === "cr" || unit === "करोड़" || unit === "करोड") value *= 1e7;
+    else if (unit === "thousand" || unit === "हजार") value *= 1e3;
     return value;
   }
 
@@ -972,6 +986,22 @@
   const OR_ELSE = new Rx(
     String.raw`(?<![a-z])(?:warna|varna|vrna|otherwise|or\s+else|(?:nahi|nahin|nai)\s+(?:\w+\s+)?toh?)(?![a-z])` +
     String.raw`|वरना|अन्यथा|(?:नहीं|नही)\s+(?:\S+\s+)?तो(?![ऀ-ॿ])`);
+  // A code that forwards your calls to someone else: "*401*<number>" (Jio), "**21*<number>#", "*21*", "**61*", "**62*",
+  // "**67*", "*004*", or the same said aloud ("star 4 0 1 star"). Whoever gets your calls gets your OTP calls too.
+  // "##002#" cancels all forwarding and is advice, not this.
+  const CALL_FORWARD = new Rx(
+    String.raw`(?<![\d*#])\*{1,2}\s?(?:401|21|61|62|67|004)\s?\*(?=\s?\+?\d)` +
+    String.raw`|(?<![a-z])star\s+(?:star\s+)?(?:4\s*0\s*1|four\s+(?:zero|o)\s+one|2\s*1|two\s+one|6\s*[127]|six\s+(?:one|two|seven)|0\s*0\s*4|zero\s+zero\s+four)\s+star(?![a-z])` +
+    String.raw`|स्टार\s+(?:स्टार\s+)?(?:4\s*0\s*1|2\s*1|6\s*[127])\s+स्टार`);
+  // Asked to pay: the instruction, not a receipt ("book now by paying 50% advance", "pay two months' rent plus
+  // deposit", "₹21,000 टोकन देकर बुक करें"); "advance of ₹3,100 received" is not an ask.
+  const PAY_ASK = new Rx(
+    String.raw`(?<![a-z])(?:pay|paying|transfer|send|book\s+now|deposit\s+(?:rs|₹|\d))(?![a-z])` +
+    String.raw`|(?<![a-z])(?:bhejo|bhejein|bhej\s+do|jama\s+kar\w*|de\s+do|dekar)(?![a-z])|देकर|भेजें|भेज\s+दें|जमा\s+करें|भुगतान\s+करें`);
+  const DELIVERY_FEE = new Rx(
+    String.raw`(?<![a-z])(?:fee|fees|charge|charges|duty|redelivery\s+charge)(?![a-z])|शुल्क|फीस|चार्ज`);
+  // The government named as the giver: with "free" and "click", a forwarded scheme post ("free" alone is not a scheme).
+  const GOVT_CLAIM = new Rx(String.raw`(?<![a-z])(?:government|govt|sarkar|sarkari|ministry)(?![a-z])|सरकार|मंत्रालय`);
   const PRIZE_EXCLUDE = new Rx(String.raw`reward\s+points|loyalty\s+points|earned\s+\d+\s+points|cashback\s+points`);
   const NO_FEE = new Rx(String.raw`(?:\bno|without|zero|free|बिना|कोई)\s+$`);  // "No registration fee", "बिना शुल्क"
   const EARN_RATE = new Rx(String.raw`earn\w*\s+(?:upto\s+|up to\s+)?(?:rs\.?|₹|inr)?\s?\d[\d,]*\s*(?:/-)?\s*(?:per day|daily|/day|a day|per hour|per task|weekly|per week)`);
@@ -1031,7 +1061,8 @@
   // Signals that may stand next to in_person: a contact mobile and a time word are normal in a genuine appointment.
   const IN_PERSON_OK = new Set(["contact_mobile", "urgency"]);
   const REQUESTS = ["otp_request", "personal_info_request", "upi_receive", "remote_access", "link_apk",
-    "advance_fee", "job_fee", "contact_mobile", "kyc_threat", "digital_arrest"];
+    "advance_fee", "job_fee", "contact_mobile", "kyc_threat", "digital_arrest", "call_forwarding",
+    "unseen_advance", "delivery_fee"];
   // A bank named as the card that gets a shop's discount is a sale, not a message from the bank (signals.py).
   const BANK_OFFER = new Rx(
     String.raw`(?:discount|cashback|off|emi|savings?)\s+(?:on|with|using|via)\s+(?:\S+\s+){0,3}?(?:credit\s+|debit\s+)?cards?\b` +
@@ -1194,6 +1225,10 @@
     const apk = APK_TEXT.search(t);
     if (apk && !negated(apk)) fire("link_apk", { domain: apk.group(0) });
     if (links.length && !nonofficial.length) fire("official_link", { domain: official[0].host });
+    // "remove the spaces and open", "स्पेस हटाकर खोलें": a link written apart on purpose. On once the pack defines it.
+    if (self.defs.link_hiding && L.link_hiding_terms && nonofficial.length) {
+      for (const x of L.link_hiding_terms.finditer(t)) if (!advisory(x)) { fire("link_hiding", { phrase: x.group(0) }); break; }
+    }
 
     // --- who sent it
     if (ctx.senderKind === "mobile" && orgClaim) {
@@ -1244,6 +1279,14 @@
     for (const x of L.threat_terms.finditer(t)) if (!advisory(x)) { fire("threat_authority", { phrase: x.group(0) }); break; }
     const couriers = L.courier_terms.finditer(t), seized = L.seized_terms.finditer(t);
     if (couriers.length && seized.length && near(couriers, seized, 80) && !advisory(seized[0])) fire("courier_seized");
+    // A small fee for a parcel's delivery or address update, paid through a link: the redelivery scam ("address
+    // incomplete, pay ₹5 to redeliver"). Couriers do not collect fees through an SMS link; a COD amount on a
+    // tracking link has no failed delivery. On once the pack defines delivery_fee and delivery_problem.
+    if (self.defs.delivery_fee && L.delivery_problem && couriers.length && nonofficial.length
+        && L.delivery_problem.search(t)
+        && DELIVERY_FEE.finditer(t).some(function (x) { return !advisory(x); })) {
+      fire("delivery_fee");
+    }
     if (L.secrecy.search(t)) fire("secrecy");
 
     // --- money bait
@@ -1281,6 +1324,16 @@
       }
     }
     if (L.loan.search(t)) fire("loan_offer");
+    // An advance, token or deposit for something you cannot see first: a flat whose "officer" owner will courier
+    // the keys, a plot with "no site visit needed", a helicopter seat whose ticket comes on WhatsApp. On once the
+    // pack defines unseen_advance, advance_ask and unseen_terms.
+    if (self.defs.unseen_advance && L.advance_ask && L.unseen_terms) {
+      const asks = L.advance_ask.finditer(t).filter(function (x) { return !advisory(x); });
+      if (asks.length && L.unseen_terms.search(t) && (ctx.amounts.length || ctx.upiIds.length || n.indexOf("upi") >= 0)
+          && asks.some(function (a) { return PAY_ASK.search(sentence(t, a.start, a.end)); })) {
+        fire("unseen_advance", { phrase: asks[0].group(0) });
+      }
+    }
 
     // --- impersonation stories
     const kyc = L.kyc_terms.finditer(t), kycThreat = L.kyc_threat_terms.finditer(t);
@@ -1325,6 +1378,15 @@
     }
     const install = L.install_terms.finditer(t);
     if (L.scheme_terms.search(t) && (nonofficial.length || install.length || apk)) fire("govt_scheme_bait");
+    // A forwarded "free scheme" or "free registration" post that says click the photo or see the details, with no
+    // official link: the link sits in the image. On once the pack defines scheme_click and click_terms.
+    else if (self.defs.scheme_click && L.click_terms && L.free_terms && !links.length
+        && L.free_terms.search(t)
+        && (L.scheme_terms.finditer(t).some(function (x) { return !L.free_terms.search(x.group(0)); })
+            || GOVT_CLAIM.search(t))
+        && L.click_terms.finditer(t).some(function (x) { return !advisory(x) && !negated(x); })) {
+      fire("scheme_click");
+    }
     // Money sent to a phone number, UPI ID or link to get a scheme or card. Ayushman and e-Shram cards are
     // free; a fee paid at the counter has no number or link and is not this. On once the fraud pack defines
     // scheme_fee (pack 1.4.0, scripts/pack_update_1_4.py); mirrors sahayak/fraud/signals.py.
@@ -1346,6 +1408,12 @@
       if (!self.negatedInSentence(t, x) && !L.advisory.search(sentence(t, x.start, x.end))) {
         fire("remote_access");
         break;
+      }
+    }
+    // Dial a code that forwards your calls. On once the pack defines call_forwarding.
+    if (self.defs.call_forwarding) {
+      for (const x of CALL_FORWARD.finditer(t)) {
+        if (!advisory(x)) { fire("call_forwarding", { code: cpSlice(x.group(0), 0, 32) }); break; }
       }
     }
     if (!fired.has("link_apk") && nonofficial.length && install.some(function (i) { return !negated(i); })) fire("app_install");
