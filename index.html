@@ -4,71 +4,86 @@
 <meta charset="utf-8">
 <meta name="sahayak-standalone" content="1">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e7c57">
+<meta name="theme-color" content="#F4F3F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101010" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Sahayak: offline scam check and benefits guide, running on this node.">
 <title>Sahayak · सहायक</title>
 <link rel="manifest" href="app/manifest.webmanifest">
 <link rel="icon" href="app/icons/icon.svg" type="image/svg+xml">
+<link rel="preload" href="app/fonts/symbols.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="app/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="app/styles.css">
 </head>
 <body>
 <header class="topbar">
-  <button class="brand" data-go="home" aria-label="Sahayak home">
-    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 7 10v12c0 11 7.3 18.6 17 22 9.7-3.4 17-11 17-22V10L24 4Z" fill="#fff"/><path d="M17 24.5l5 5 10-11" fill="none" stroke="#0e7c57" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span class="brand-text"><b>सहायक</b><small>SAHAYAK</small></span>
-  </button>
-  <span class="node-pill" id="node-pill" title=""><span class="dot" aria-hidden="true"></span><span data-i18n="node_pill"></span></span>
-  <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true" aria-label="Read screens aloud">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path class="waves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mute" d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-  </button>
-  <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Change language">EN</button>
+  <div class="topbar-inner">
+    <button class="brand" data-go="home" type="button" aria-label="Sahayak home">
+      <span class="brand-mark" aria-hidden="true"><span class="ms">verified_user</span></span>
+      <span class="brand-text"><b>सहायक</b><small>SAHAYAK</small></span>
+    </button>
+    <span class="node-pill" id="node-pill" title=""><span class="dot" aria-hidden="true"></span><span data-i18n="node_pill"></span></span>
+    <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="true" aria-label="Read screens aloud">
+      <span class="ms on" aria-hidden="true">volume_up</span><span class="ms off" aria-hidden="true">volume_off</span>
+    </button>
+    <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Change language">EN</button>
+  </div>
 </header>
 
 <main id="main">
   <!-- HOME -->
   <section class="screen" data-screen="home">
-    <h1 data-i18n="home_title"></h1>
-    <p class="sub" data-i18n="home_sub"></p>
+    <div class="hero">
+      <span class="hero-mark ms" aria-hidden="true">verified_user</span>
+      <div class="hero-glass">
+        <h1 data-i18n="home_title"></h1>
+        <p class="sub" data-i18n="home_sub"></p>
+      </div>
+    </div>
     <p class="note" id="phone-mode-note" data-i18n="phone_mode_note" hidden></p>
     <div class="tiles">
       <button class="tile tile-shield" data-go="check" type="button">
-        <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M28 5 9 12v13c0 13 8 22 19 26 11-4 19-13 19-26V12L28 5Z" fill="#e3f3ec" stroke="#0e7c57" stroke-width="2.5"/><path d="M20 28.5l6 6 11-12" fill="none" stroke="#0e7c57" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="tile-title" data-i18n="tile_check"></span>
-        <span class="tile-sub" data-i18n="tile_check_sub"></span>
+        <span class="tile-icon" aria-hidden="true"><span class="ms">shield</span></span>
+        <span class="tile-text"><span class="tile-title" data-i18n="tile_check"></span><span class="tile-sub" data-i18n="tile_check_sub"></span></span>
+        <span class="ms chev" aria-hidden="true">chevron_right</span>
       </button>
       <button class="tile tile-rupee" data-go="benefits" type="button">
-        <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="#fff1e2" stroke="#e8711a" stroke-width="2.5"/><path d="M20 17h17M20 24h17M24 17c8 0 8 13 0 13h-3l12 11" fill="none" stroke="#e8711a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="tile-title" data-i18n="tile_benefits"></span>
-        <span class="tile-sub" data-i18n="tile_benefits_sub"></span>
+        <span class="tile-icon" aria-hidden="true"><span class="ms">currency_rupee</span></span>
+        <span class="tile-text"><span class="tile-title" data-i18n="tile_benefits"></span><span class="tile-sub" data-i18n="tile_benefits_sub"></span></span>
+        <span class="ms chev" aria-hidden="true">chevron_right</span>
       </button>
       <a class="tile tile-help" href="tel:1930">
-        <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="23" fill="#fde8e6" stroke="#c0271f" stroke-width="2.5"/><path d="M21 16c-2 0-4 2-4 4 0 10 9 19 19 19 2 0 4-2 4-4v-3l-6-2-3 3c-3-1-7-5-8-8l3-3-2-6h-3Z" fill="#c0271f"/></svg>
-        <span class="tile-title" data-i18n="tile_help"></span>
-        <span class="tile-sub" data-i18n="tile_help_sub"></span>
+        <span class="tile-icon" aria-hidden="true"><span class="ms">call</span></span>
+        <span class="tile-text"><span class="tile-title" data-i18n="tile_help"></span><span class="tile-sub" data-i18n="tile_help_sub"></span></span>
+        <span class="ms chev" aria-hidden="true">chevron_right</span>
       </a>
     </div>
-    <details class="voice-settings">
-      <summary data-i18n="voice_settings"></summary>
-      <div class="seg" role="radiogroup" aria-label="Voice">
-        <label><input type="radio" name="vgender" value="female" checked><span data-i18n="voice_female"></span></label>
-        <label><input type="radio" name="vgender" value="male"><span data-i18n="voice_male"></span></label>
+    <details class="voice-settings settings">
+      <summary><span class="ms" aria-hidden="true">record_voice_over</span><span data-i18n="voice_settings"></span></summary>
+      <div class="settings-body">
+        <div class="seg" role="radiogroup" aria-label="Voice">
+          <label><input type="radio" name="vgender" value="female" checked><span data-i18n="voice_female"></span></label>
+          <label><input type="radio" name="vgender" value="male"><span data-i18n="voice_male"></span></label>
+        </div>
+        <div class="seg" role="radiogroup" aria-label="Speed">
+          <label><input type="radio" name="vspeed" value="normal" checked><span data-i18n="speed_normal"></span></label>
+          <label><input type="radio" name="vspeed" value="slow"><span data-i18n="speed_slow"></span></label>
+        </div>
+        <p class="note" id="voice-status"></p>
       </div>
-      <div class="seg" role="radiogroup" aria-label="Speed">
-        <label><input type="radio" name="vspeed" value="normal" checked><span data-i18n="speed_normal"></span></label>
-        <label><input type="radio" name="vspeed" value="slow"><span data-i18n="speed_slow"></span></label>
-      </div>
-      <p class="note" id="voice-status"></p>
     </details>
   </section>
 
   <!-- CHECK A MESSAGE -->
   <section class="screen" data-screen="check" hidden>
-    <h2 data-i18n="check_title"></h2>
+    <div class="screen-head">
+      <button class="back" data-go="home" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+      <h2 data-i18n="check_title"></h2>
+    </div>
     <div class="modes" role="radiogroup" aria-label="What to check">
-      <label><input type="radio" name="mode" value="text" checked><span data-i18n="mode_text"></span></label>
-      <label><input type="radio" name="mode" value="call"><span data-i18n="mode_call"></span></label>
-      <label><input type="radio" name="mode" value="qr"><span data-i18n="mode_qr"></span></label>
-      <label><input type="radio" name="mode" value="ocr"><span data-i18n="mode_ocr"></span></label>
+      <label><input type="radio" name="mode" value="text" checked><span class="seg-item"><span class="ms" aria-hidden="true">sms</span><span data-i18n="mode_text"></span></span></label>
+      <label><input type="radio" name="mode" value="call"><span class="seg-item"><span class="ms" aria-hidden="true">phone_in_talk</span><span data-i18n="mode_call"></span></span></label>
+      <label><input type="radio" name="mode" value="qr"><span class="seg-item"><span class="ms" aria-hidden="true">qr_code_scanner</span><span data-i18n="mode_qr"></span></span></label>
+      <label><input type="radio" name="mode" value="ocr"><span class="seg-item"><span class="ms" aria-hidden="true">screenshot_monitor</span><span data-i18n="mode_ocr"></span></span></label>
     </div>
     <div id="mode-text">
       <label class="label" for="msg" id="msg-label" data-i18n="check_label"></label>
@@ -80,7 +95,7 @@
         <label class="label" for="sender" data-i18n="sender_label"></label>
         <input id="sender" type="text" maxlength="40" autocomplete="off" inputmode="text" placeholder="AX-SBIBNK-S / 98xxxxxx10">
       </details>
-      <button id="btn-check" class="primary big" type="button" data-i18n="check_btn"></button>
+      <button id="btn-check" class="primary big" type="button"><span class="ms" aria-hidden="true">shield</span><span class="btn-label" data-i18n="check_btn"></span></button>
       <p class="try" data-i18n="try_examples"></p>
       <div class="chips" id="examples"></div>
     </div>
@@ -88,7 +103,7 @@
       <p class="label" id="image-label"></p>
       <label class="photo-btn">
         <input id="image-input" type="file" accept="image/*" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span class="photo-glyph" aria-hidden="true"><span class="ms">photo_camera</span></span>
         <span id="image-btn-label"></span>
       </label>
       <p class="try" id="qr-try-label" data-i18n="qr_try"></p>
@@ -98,6 +113,9 @@
 
   <!-- RESULT -->
   <section class="screen" data-screen="result" hidden>
+    <div class="screen-head">
+      <button class="back" data-go="check" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+    </div>
     <div id="verdict" class="verdict" role="status" aria-live="polite"></div>
     <h2 id="headline" tabindex="-1"></h2>
     <div id="qr-box" class="qr-box" hidden></div>
@@ -109,13 +127,13 @@
     <ul id="reasons" class="reasons"></ul>
     <h3 data-i18n="what_to_do"></h3>
     <ol id="actions" class="actions"></ol>
-    <div class="cta-row">
-      <a id="btn-1930" class="danger" href="tel:1930"><span data-i18n="call_1930"></span></a>
-      <button id="btn-speak" class="secondary" type="button" data-i18n="speak_btn"></button>
-      <button id="btn-complaint" class="secondary" type="button" data-i18n="complaint_btn"></button>
-      <button class="ghost" data-go="check" type="button" data-i18n="check_another"></button>
-      <button id="btn-real-benefits" class="secondary wide" data-go="benefits" type="button" data-i18n="real_benefits" hidden></button>
-      <button id="btn-agent-check" class="secondary wide" type="button" data-i18n="ask_agent"></button>
+    <div class="cta-row result-actions">
+      <a id="btn-1930" class="danger wide" href="tel:1930"><span class="ms" aria-hidden="true">call</span><span data-i18n="call_1930"></span></a>
+      <button id="btn-speak" class="tinted" type="button"><span class="ms" aria-hidden="true">volume_up</span><span data-i18n="speak_btn"></span></button>
+      <button id="btn-complaint" class="secondary" type="button"><span class="ms" aria-hidden="true">description</span><span data-i18n="complaint_btn"></span></button>
+      <button id="btn-real-benefits" class="tinted wide" data-go="benefits" type="button" hidden><span class="ms" aria-hidden="true">account_balance</span><span data-i18n="real_benefits"></span></button>
+      <button id="btn-agent-check" class="secondary wide" type="button"><span class="ms" aria-hidden="true">support_agent</span><span data-i18n="ask_agent"></span></button>
+      <button class="secondary wide" data-go="check" type="button"><span class="ms" aria-hidden="true">refresh</span><span data-i18n="check_another"></span></button>
     </div>
     <button id="safety-badge" class="safety" type="button" aria-expanded="false" aria-controls="safety-detail" hidden></button>
     <div id="safety-detail" class="safety-detail" hidden></div>
@@ -124,7 +142,10 @@
 
   <!-- 1930 COMPLAINT DRAFT -->
   <section class="screen" data-screen="complaint" hidden>
-    <h2 data-i18n="complaint_title"></h2>
+    <div class="screen-head">
+      <button class="back no-print" data-go="result" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+      <h2 data-i18n="complaint_title"></h2>
+    </div>
     <p class="note" data-i18n="complaint_note"></p>
     <form id="complaint-form" class="form-grid" autocomplete="off">
       <label><span data-i18n="c_when"></span><input type="datetime-local" name="when"></label>
@@ -137,13 +158,17 @@
       <label><span data-i18n="c_message"></span><textarea name="message" rows="5" readonly></textarea></label>
     </form>
     <div class="cta-row no-print">
-      <button id="btn-print" class="primary" type="button" data-i18n="print_btn"></button>
-      <button class="secondary" data-go="result" type="button" data-i18n="back"></button>
+      <button id="btn-print" class="primary" type="button"><span class="ms" aria-hidden="true">print</span><span data-i18n="print_btn"></span></button>
+      <button class="secondary" data-go="result" type="button"><span class="ms" aria-hidden="true">arrow_back</span><span data-i18n="back"></span></button>
     </div>
   </section>
 
   <!-- BENEFITS NAVIGATOR: intro -->
   <section class="screen" data-screen="benefits" hidden>
+    <div class="screen-head">
+      <button class="back" data-go="home" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+    </div>
+    <span class="feature-icon" aria-hidden="true"><span class="ms">currency_rupee</span></span>
     <h2 data-i18n="tile_benefits"></h2>
     <p class="sub" data-i18n="nav_intro"></p>
     <ul class="promise">
@@ -151,7 +176,7 @@
       <li data-i18n="nav_promise_2"></li>
       <li data-i18n="nav_promise_3"></li>
     </ul>
-    <button id="btn-nav-start" class="primary big" type="button" data-i18n="nav_start"></button>
+    <button id="btn-nav-start" class="primary big" type="button"><span data-i18n="nav_start"></span><span class="ms" aria-hidden="true">arrow_forward</span></button>
     <p class="try" data-i18n="nav_try"></p>
     <div class="chips" id="nav-demos"></div>
     <p class="covers" id="nav-covers"></p>
@@ -159,9 +184,12 @@
 
   <!-- BENEFITS NAVIGATOR: one question per screen -->
   <section class="screen" data-screen="question" hidden>
-    <div class="q-progress">
-      <span id="q-count"></span>
-      <span class="bar" aria-hidden="true"><span id="q-bar"></span></span>
+    <div class="q-head">
+      <button id="btn-q-back" class="back" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+      <div class="q-progress">
+        <span id="q-count"></span>
+        <span class="bar" aria-hidden="true"><span id="q-bar"></span></span>
+      </div>
     </div>
     <h2 id="q-text" tabindex="-1"></h2>
     <p id="q-help" class="sub"></p>
@@ -169,40 +197,45 @@
     <div id="q-mic" class="mic-slot"></div>
     <div id="q-confirm" class="confirm" role="alertdialog" aria-live="assertive" hidden></div>
     <div class="q-foot">
-      <button id="btn-q-back" class="ghost" type="button" data-i18n="back"></button>
-      <button id="btn-q-listen" class="secondary" type="button" data-i18n="speak_btn"></button>
+      <button id="btn-q-listen" class="tinted" type="button"><span class="ms" aria-hidden="true">volume_up</span><span data-i18n="speak_btn"></span></button>
     </div>
   </section>
 
   <!-- BENEFITS NAVIGATOR: result -->
   <section class="screen" data-screen="benefits-result" hidden>
+    <div class="screen-head">
+      <button class="back" data-go="benefits" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+    </div>
     <div id="nav-summary" class="nav-summary" role="status" aria-live="polite" tabindex="-1"></div>
     <div id="nav-health"></div>
     <div id="nav-groups"></div>
     <p class="note" id="nav-amount-note"></p>
     <p class="note warn" id="nav-fraud-note"></p>
     <div class="cta-row">
-      <button id="btn-slip" class="primary wide" type="button" data-i18n="nav_slip"></button>
-      <button id="btn-nav-listen" class="secondary" type="button" data-i18n="speak_btn"></button>
-      <button id="btn-nav-change" class="secondary" type="button" data-i18n="nav_change"></button>
-      <button id="btn-agent-nav" class="secondary wide" type="button" data-i18n="ask_agent"></button>
-      <button id="btn-nav-restart" class="ghost wide" type="button" data-i18n="nav_restart"></button>
+      <button id="btn-slip" class="primary wide" type="button"><span class="ms" aria-hidden="true">receipt_long</span><span data-i18n="nav_slip"></span></button>
+      <button id="btn-nav-listen" class="tinted" type="button"><span class="ms" aria-hidden="true">volume_up</span><span data-i18n="speak_btn"></span></button>
+      <button id="btn-nav-change" class="secondary" type="button"><span class="ms" aria-hidden="true">undo</span><span data-i18n="nav_change"></span></button>
+      <button id="btn-agent-nav" class="secondary wide" type="button"><span class="ms" aria-hidden="true">support_agent</span><span data-i18n="ask_agent"></span></button>
+      <button id="btn-nav-restart" class="ghost wide" type="button"><span class="ms" aria-hidden="true">restart_alt</span><span data-i18n="nav_restart"></span></button>
     </div>
     <p id="nav-meta" class="meta"></p>
   </section>
 
   <!-- BENEFITS NAVIGATOR: printable case slip -->
   <section class="screen" data-screen="slip" hidden>
+    <div class="screen-head no-print">
+      <button class="back" data-go="benefits-result" type="button" data-i18n-label="back"><span class="ms" aria-hidden="true">arrow_back</span></button>
+    </div>
     <div id="slip-sheet" class="slip-sheet"></div>
     <div class="cta-row no-print">
-      <button id="btn-slip-print" class="primary" type="button" data-i18n="print_btn"></button>
-      <button class="secondary" data-go="benefits-result" type="button" data-i18n="back"></button>
+      <button id="btn-slip-print" class="primary" type="button"><span class="ms" aria-hidden="true">print</span><span data-i18n="print_btn"></span></button>
+      <button class="secondary" data-go="benefits-result" type="button"><span class="ms" aria-hidden="true">arrow_back</span><span data-i18n="back"></span></button>
     </div>
   </section>
 </main>
 
 <div id="ticket" class="ticket-sheet" role="alertdialog" aria-live="assertive" hidden>
-  <p data-i18n="ticket_title"></p>
+  <p class="ticket-label"><span class="ms" aria-hidden="true">confirmation_number</span><span data-i18n="ticket_title"></span></p>
   <div id="ticket-no" class="ticket-no"></div>
   <p class="sub" data-i18n="ticket_sub"></p>
   <button class="primary" id="ticket-ok" type="button" data-i18n="ticket_ok"></button>

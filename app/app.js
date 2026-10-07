@@ -150,12 +150,8 @@
     },
   };
 
-  const ICONS = {
-    scam: '<svg viewBox="0 0 52 52" aria-hidden="true"><path d="M26 3 6 10v14c0 13 9 22 20 26 11-4 20-13 20-26V10L26 3Z" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="2.5"/><path d="M19 19l14 14M33 19 19 33" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
-    suspicious: '<svg viewBox="0 0 52 52" aria-hidden="true"><path d="M26 5 3 46h46L26 5Z" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M26 20v13" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="39" r="2.6" fill="currentColor"/></svg>',
-    no_signs: '<svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="2.5"/><path d="M16 26.5l7 7 13-14" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    unreadable: '<svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="currentColor" opacity=".12" stroke="currentColor" stroke-width="2.5"/><path d="M20 20.5a6 6 0 1 1 8.6 5.4c-1.7.8-2.6 2-2.6 3.8V31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="26" cy="37.5" r="2.6" fill="currentColor"/></svg>',
-  };
+  // Verdict glyphs (Material Symbols names, drawn by web/fonts/symbols.woff2).
+  const ICONS = { scam: "gpp_bad", suspicious: "warning", no_signs: "verified_user", unreadable: "help" };
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -173,6 +169,7 @@
   function applyI18n() {
     document.documentElement.lang = state.lang;
     $$("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    $$("[data-i18n-label]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nLabel)); });
     $("#lang-toggle").textContent = state.lang === "hi" ? "EN" : "हिं";
     if (state.check) renderResult(state.check);
     renderExamples();
@@ -322,6 +319,7 @@
       node.dataset.i18n = off ? `${key}_phone` : key;  // applyI18n keeps it on a language switch
       node.textContent = t(node.dataset.i18n);
     }
+    $("#node-pill").classList.toggle("phone", off);
     $("#phone-mode-note").hidden = !off;
     $('input[name="mode"][value="ocr"]').closest("label").hidden = off;
     $("#btn-agent-check").hidden = off;
@@ -458,7 +456,7 @@
       if (state.nodeless) { checkQR(null, ex.payload); return; }
       const res = await fetch(`/api/demo/qr/${ex.id}`).catch(() => null);
       if (res && res.ok) checkQR(await res.blob()); else checkQR(null, ex.payload);
-    } }, tr(ex.label))));
+    } }, icon("qr_code_2"), tr(ex.label))));
   }
 
   function renderQRBox(card) {
@@ -466,10 +464,12 @@
     const q = card.qr;
     if (!q) { box.hidden = true; return; }
     const rows = [];
+    const row = (key, value, cls) => el("div", { class: `qr-row${cls ? ` ${cls}` : ""}` },
+      el("span", { class: "qr-k" }, t(key)), el("span", { class: "qr-v" }, value));
     if (q.kind === "upi") {
-      if (q.name || q.payee) rows.push(el("div", {}, el("b", {}, `${t("qr_pays")}: `), q.name || q.payee));
-      if (q.payee) rows.push(el("div", {}, el("b", {}, `${t("qr_upi")}: `), q.payee));
-      if (q.amount_text) rows.push(el("div", { class: "qr-amount" }, el("b", {}, `${t("qr_amount")}: `), q.amount_text));
+      if (q.name || q.payee) rows.push(row("qr_pays", q.name || q.payee));
+      if (q.payee) rows.push(row("qr_upi", q.payee));
+      if (q.amount_text) rows.push(row("qr_amount", q.amount_text, "qr-amount"));
     }
     box.replaceChildren(...rows, ...(q.facts || []).map((f) => el("p", { class: "qr-fact" }, f[state.lang])));
     box.hidden = !rows.length && !(q.facts || []).length;
@@ -491,10 +491,8 @@
   function renderExamples() {
     const root = $("#examples");
     root.replaceChildren(...examples.map((ex) => {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "chip"; b.textContent = ex.label[state.lang] || ex.label.en;
-      b.addEventListener("click", () => useExample(ex));
-      return b;
+      return el("button", { type: "button", class: "chip", onclick: () => useExample(ex) },
+        icon(ex.input_type === "call" ? "phone_in_talk" : "sms"), ex.label[state.lang] || ex.label.en);
     }));
   }
 
@@ -503,7 +501,8 @@
     const text = $("#msg").value.trim();
     if (!text) { toast(t("err_empty")); $("#msg").focus(); return; }
     const btn = $("#btn-check");
-    btn.disabled = true; btn.textContent = t("checking");
+    const label = $("#btn-check .btn-label");
+    btn.disabled = true; btn.classList.add("loading"); label.textContent = t("checking");
     const sender = $("#sender").value.trim() || null;
     const input_type = state.mode === "call" ? "call" : state.mode === "ocr" ? "ocr" : "text";
     try {
@@ -517,7 +516,7 @@
     } catch {
       toast(t("err_network"));
     } finally {
-      btn.disabled = false; btn.textContent = t("check_btn");
+      btn.disabled = false; btn.classList.remove("loading"); label.textContent = t("check_btn");
     }
   }
   $("#btn-check").addEventListener("click", runCheck);
@@ -557,12 +556,11 @@
   function renderResult(card) {
     const v = $("#verdict");
     v.className = `verdict ${card.verdict}`;
-    v.innerHTML = ICONS[card.verdict];  // static, trusted SVG only
-    const words = document.createElement("div");
-    const l1 = document.createElement("div"); l1.className = "v-label"; l1.textContent = card.label[state.lang];
-    const l2 = document.createElement("div"); l2.className = "v-label-2"; l2.textContent = card.label[other(state.lang)];
-    words.append(l1, l2);
-    v.append(words);
+    v.replaceChildren(
+      el("span", { class: "v-glyph", "aria-hidden": "true" }, icon(ICONS[card.verdict])),
+      el("div", { class: "v-words" },
+        el("div", { class: "v-label" }, card.label[state.lang]),
+        el("div", { class: "v-label-2", lang: other(state.lang) }, card.label[other(state.lang)])));
 
     $("#headline").textContent = card.headline[state.lang];
     renderQRBox(card);
@@ -796,7 +794,7 @@
   const Mic = window.SahayakMic || { canListen: false, start: async () => {}, stop: () => null };
   const canListen = Mic.canListen;
   let micBusy = false;
-  const MIC_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M8.5 21h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const micGlyph = () => el("span", { class: "mic-glyph", "aria-hidden": "true" }, icon("mic"));
 
   async function asr(wav, params) {
     const q = new URLSearchParams({ lang: state.lang, ...params });
@@ -810,8 +808,7 @@
   function recorderButton(labelKey, onAudio) {
     const label = el("span", { class: "mic-label" }, t(`${labelKey}_upload`));
     const input = el("input", { type: "file", accept: "audio/*", capture: true, hidden: true });
-    const btn = el("button", { type: "button", class: "mic upload" }, label, input);
-    btn.insertAdjacentHTML("afterbegin", MIC_SVG);  // static, trusted SVG only
+    const btn = el("button", { type: "button", class: "mic upload" }, micGlyph(), label, input);
     btn.addEventListener("click", (e) => { if (e.target !== input) input.click(); });
     input.addEventListener("change", async () => {
       const file = input.files && input.files[0];
@@ -828,8 +825,7 @@
   function micButton(labelKey, onAudio) {
     const bar = el("span", { class: "mic-bar" });
     const label = el("span", { class: "mic-label" }, t(labelKey));
-    const btn = el("button", { type: "button", class: "mic", "aria-label": t(labelKey) }, label, el("span", { class: "mic-meter" }, bar));
-    btn.insertAdjacentHTML("afterbegin", MIC_SVG);  // static, trusted SVG only
+    const btn = el("button", { type: "button", class: "mic", "aria-label": t(labelKey) }, micGlyph(), label, el("span", { class: "mic-meter" }, bar));
     if (!canListen) return recorderButton(labelKey, onAudio);
     let starting = null;
     const reset = () => { btn.classList.remove("on"); label.textContent = t(labelKey); bar.style.transform = "scaleX(0)"; };
@@ -936,7 +932,7 @@
   // question it is given and shows the result. All text goes in through textContent.
   const NAV_GROUPS = ["eligible", "likely", "check", "unlock", "have", "not_eligible"];
   const USEFUL = ["eligible", "likely", "check", "unlock", "have"];
-  const TRUTH_ICON = { T: "✓", L: "≈", U: "?", F: "✗" };
+  const TRUTH_ICON = { T: "check_circle", L: "contrast", U: "help", F: "cancel" };
   const SLIP_MARK = { eligible: "✓", likely: "≈", check: "?", unlock: "→" };
   const nav = { catalog: null, answers: {}, order: [], question: null, result: null, already: new Set(), session: null };
   const newSession = () => (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)).replace(/-/g, "").slice(0, 24);
@@ -953,6 +949,8 @@
     return node;
   }
   const tr = (obj) => (obj ? obj[state.lang] ?? obj.en : "");
+  // A Material Symbols glyph; hidden from screen readers, so it never changes what is read out.
+  const icon = (name, cls) => el("span", { class: `ms${cls ? ` ${cls}` : ""}`, "aria-hidden": "true" }, name);
   const fmt = (s, vars) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
   const hostOf = (url) => { try { return new URL(url).host.replace(/^www\./, ""); } catch { return ""; } };
 
@@ -964,7 +962,7 @@
   function renderNavIntro() {
     const c = nav.catalog;
     $("#nav-demos").replaceChildren(...(c ? c.demos : []).map((d) =>
-      el("button", { type: "button", class: "chip", onclick: () => navDemo(d) }, tr(d.label))));
+      el("button", { type: "button", class: "chip", onclick: () => navDemo(d) }, icon("person"), tr(d.label))));
     $("#nav-covers").textContent = c ? `${t("nav_covers")} ${c.schemes.map((s) => s.short).join(" · ")}` : "";
   }
 
@@ -1095,7 +1093,7 @@
     };
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
     return [
-      el("div", { class: "age-row" }, input, el("button", { type: "button", class: "primary", onclick: submit }, t("next"))),
+      el("div", { class: "age-row" }, input, el("button", { type: "button", class: "primary", onclick: submit }, t("next"), icon("arrow_forward"))),
       el("p", { class: "try" }, t("age_unsure")),
       el("div", { class: "bands" }, q.bands.map((b) =>
         el("button", { type: "button", class: "opt", onclick: () => navAnswer(b.id) }, tr(b.label)))),
@@ -1104,7 +1102,7 @@
 
   function multiInput(q) {
     const chosen = new Set();
-    const nextBtn = el("button", { type: "button", class: "primary", disabled: true, onclick: () => navAnswer([...chosen]) }, t("next"));
+    const nextBtn = el("button", { type: "button", class: "primary", disabled: true, onclick: () => navAnswer([...chosen]) }, t("next"), icon("arrow_forward"));
     const toggles = q.options.map((o) => {
       const b = el("button", { type: "button", class: "opt toggle", "aria-pressed": "false" },
         el("span", { class: "tick", "aria-hidden": "true" }), el("span", {}, tr(o.label)));
@@ -1175,7 +1173,7 @@
       s.benefit_now && s.status !== "not_eligible" ? el("div", { class: "s-now" }, tr(s.benefit_now)) : null,
       el("p", { class: "s-what" }, tr(s.what)));
     const why = el("ul", { class: "why" }, s.reasons.map((r) =>
-      el("li", { class: `t-${r.truth}` }, el("span", { class: "ti", "aria-hidden": "true" }, TRUTH_ICON[r.truth]), tr(r.text))));
+      el("li", { class: `t-${r.truth}` }, icon(TRUTH_ICON[r.truth], "ti"), el("span", {}, tr(r.text)))));
     if (s.status === "not_eligible") return el("article", { class: `scheme s-${s.status}` }, head, why);
     const sources = s.sources.map((x) => `${x.publisher}${x.page_date ? `, ${x.page_date}` : ""} (${hostOf(x.url)})`).join(" · ");
     const details = el("details", {}, el("summary", {}, t("details")),
@@ -1187,7 +1185,7 @@
       el("h5", {}, t("where_label")), el("p", {}, tr(s.where)),
       el("h5", {}, t("say_label")), el("blockquote", { class: "say" }, s.counter[state.lang]),
       el("button", { type: "button", class: "chip", onclick: () => { if (!speak(s.counter[state.lang], state.lang)) toast(t("no_voice")); } },
-        t("speak_btn")),
+        icon("volume_up"), t("speak_btn")),
       s.notes.length ? el("ul", { class: "s-notes" }, s.notes.map((n) => el("li", {}, tr(n)))) : null,
       el("p", { class: "src" }, `${t("source_label")}: ${sources} · ${t("checked_label")} ${s.sources[0].checked}`));
     // "I already get this" makes no sense for a scheme that first needs a bank account.
@@ -1274,7 +1272,7 @@
       const h = await api("/api/health");
       state.health = h;
       const fraud = (h.packs || []).find((p) => p.name === "fraud");
-      $("#pack-version").textContent = fraud ? `· fraud pack v${fraud.version}` : "";
+      $("#pack-version").textContent = fraud ? `fraud pack v${fraud.version}` : "";
       $("#node-pill").title = `Sahayak node ${h.version}`;
       voice.nodeOk = Boolean(h.voice && h.voice.tts && (h.voice.tts.hi || []).length);
       renderVoiceStatus();
@@ -1283,7 +1281,7 @@
       setNodeless(true);  // away from the node: say so, and show the packs this phone checks with
       loadLocal().then(() => {
         const fraud = local.packs.find((p) => p.name === "fraud");
-        $("#pack-version").textContent = fraud ? `· fraud pack v${fraud.version}` : "";
+        $("#pack-version").textContent = fraud ? `fraud pack v${fraud.version}` : "";
       }).catch(() => {});
     }
   }
