@@ -22,8 +22,7 @@ This stand-alone build leaves out what needs the node: voice input, reading scre
 queue. QR photos use your browser's own QR reader where it has one, and screens are read aloud by your phone's
 voice.
 
-- Source, tests and evidence: https://github.com/ishmiit/Sahayak (this build is from the `finale-prep-2026-10`
-  branch, made with `python scripts/build_tryit.py`)
+- Source, tests and evidence: https://github.com/roshworldwide/Sahayak (made with `python scripts/build_tryit.py`)
 - Design: Rosh 27. Fonts and icons ship with the site (Geist, SIL OFL 1.1; Material Symbols, Apache-2.0; see
   `app/fonts/LICENSE.txt`), so it works and looks the same offline.
 - Team: Roshan Raj, Ishmiit Singh
